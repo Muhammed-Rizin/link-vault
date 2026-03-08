@@ -2,9 +2,9 @@ import { NextResponse } from "next/server"
 import { enrichUrl, type EnrichResponse } from "@/features/vault/services/enrichment.service";
 
 export async function POST(request: Request) {
-  let body: { url?: string };
+  let body: { url?: string; existingCategories?: string[] };
   try {
-    body = (await request.json()) as { url?: string };
+    body = (await request.json()) as { url?: string; existingCategories?: string[] };
   } catch {
     return NextResponse.json({ error: "Invalid JSON body." }, { status: 400 });
   }
@@ -15,7 +15,7 @@ export async function POST(request: Request) {
   }
 
   try {
-    const payload = await enrichUrl(rawUrl);
+    const payload = await enrichUrl(rawUrl, body.existingCategories);
     return NextResponse.json(payload);
   } catch {
     return NextResponse.json(

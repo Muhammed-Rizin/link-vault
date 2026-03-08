@@ -3,6 +3,7 @@ export type EnrichResponse = {
   description: string | null;
   summary: string | null;
   image: string | null;
+  category: string | null;
 };
 
 function extractPlainText(html: string): string {
@@ -15,34 +16,48 @@ function extractPlainText(html: string): string {
 async function summarizeWithAI(
   text: string,
   defaultTitle: string | null,
-): Promise<{ title: string; summary: string } | null> {
-  const apiKey = process.env.NEXT_PUBLIC_GEMINI_API_KEY;
+  description?: string | null,
+  existingCategories?: string[],
+): Promise<{ title: string; summary: string; category: string } | null> {
+  const apiKey = process.env.NEXT_PUBLIC_GEMINI_API_KEY || process.env.GEMINI_API_KEY;
   if (!apiKey) return null;
 
-  try {
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
-    const response = await import("next/server").then(() =>
-      fetch(url, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          contents: [
-            {
-              parts: [
-                {
-                  text: `Analyze the following webpage extracted text. Extract or generate a clean, accurate Title (Heading) and a short Summary (1-2 sentences) of the content.
-Return ONLY a valid JSON object strictly matching this format: {"title": "The Title", "summary": "The summary here."}
-If you can't determine it, use "${defaultTitle || "Unknown"}" as title.
+  const contextText = `
+Webpage Metadata:
+Title: ${defaultTitle || "N/A"}
+Description: ${description || "N/A"}
 
-Webpage Text:
-${text}`,
-                },
-              ],
-            },
-          ],
-        }),
+Visible Body Content:
+${text}
+`.trim();
+  try {
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
+    const response = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        contents: [
+          {
+            parts: [
+              {
+                text: `Analyze the provided webpage data. Extract or generate:
+1. A clean, accurate Title (Heading).
+2. A short, engaging Summary (1-2 sentences).
+3. A single Suggested Category (e.g., "AI Tools", "Design", "DevTools", "News", "Resource", etc.).
+
+${existingCategories?.length ? `The available categories are: ${existingCategories.join(", ")}. If the content fits well into one of these, use it exactly as written. Otherwise, suggest a NEW professional category name.` : `Suggest a short, professional category name.`}
+
+Return ONLY a valid JSON object strictly matching this format: {"title": "The Title", "summary": "The summary here.", "category": "Category Name"}
+IMPORTANT: Never return null or empty strings for any field. If unsure about the category, use a general term like "Software" or "Web".
+
+Data to analyze:
+${contextText}`,
+              },
+            ],
+          },
+        ],
       }),
-    );
+    });
 
     if (!response.ok) return null;
     const data = await response.json();
@@ -114,7 +129,10 @@ async function fetchWithTimeout(url: string, options: RequestInit = {}, timeoutM
   }
 }
 
-export async function enrichUrl(rawUrl: string): Promise<EnrichResponse> {
+export async function enrichUrl(
+  rawUrl: string,
+  existingCategories?: string[],
+): Promise<EnrichResponse> {
   const parsedUrl = new URL(rawUrl);
   if (!["http:", "https:"].includes(parsedUrl.protocol)) {
     throw new Error("Unsupported protocol");
@@ -132,6 +150,7 @@ export async function enrichUrl(rawUrl: string): Promise<EnrichResponse> {
           description: data.author_name ? `YouTube Video by ${data.author_name}` : "YouTube Video",
           summary: data.title || null,
           image: data.thumbnail_url || null,
+          category: "Video",
         };
       }
     } catch {
@@ -151,6 +170,7 @@ export async function enrichUrl(rawUrl: string): Promise<EnrichResponse> {
           description: data.author_name ? `Post by ${data.author_name}` : "X Post",
           summary: data.author_name ? `Post by ${data.author_name}` : "X Post",
           image: null,
+          category: "Social",
         };
       }
     } catch {
@@ -170,6 +190,7 @@ export async function enrichUrl(rawUrl: string): Promise<EnrichResponse> {
           description: data.author_name ? `TikTok Video by ${data.author_name}` : "TikTok Video",
           summary: data.title || null,
           image: data.thumbnail_url || null,
+          category: "Video",
         };
       }
     } catch {
@@ -196,6 +217,7 @@ export async function enrichUrl(rawUrl: string): Promise<EnrichResponse> {
             description: data.description || "View this content directly on the app",
             summary: data.description || "Social Media Link",
             image: data.image?.url || null,
+            category: "Social",
           };
         }
       }
@@ -218,6 +240,7 @@ export async function enrichUrl(rawUrl: string): Promise<EnrichResponse> {
           description: `View @${paths[0]}'s profile, posts, and reels on Instagram.`,
           summary: `Instagram profile for @${paths[0]}`,
           image: null,
+          category: "Social",
         };
       } else if (isPost && paths[1]) {
         return {
@@ -225,6 +248,7 @@ export async function enrichUrl(rawUrl: string): Promise<EnrichResponse> {
           description: `View this post on Instagram.`,
           summary: `Instagram post ID: ${paths[1]}`,
           image: null,
+          category: "Social",
         };
       } else {
         return {
@@ -232,6 +256,7 @@ export async function enrichUrl(rawUrl: string): Promise<EnrichResponse> {
           description: "View on Instagram",
           summary: "Instagram Link",
           image: null,
+          category: "Social",
         };
       }
     }
@@ -257,6 +282,7 @@ export async function enrichUrl(rawUrl: string): Promise<EnrichResponse> {
               ? `${post.selftext.substring(0, 150)}...`
               : `Reddit post in r/${post.subreddit}`,
             image: post.thumbnail && post.thumbnail.startsWith("http") ? post.thumbnail : null,
+            category: "Community",
           };
         }
       }
@@ -277,6 +303,7 @@ export async function enrichUrl(rawUrl: string): Promise<EnrichResponse> {
         description: `View professional profile on LinkedIn.`,
         summary: `LinkedIn Profile`,
         image: null,
+        category: "Professional",
       };
     } else if (paths[0] === "company" && paths[1]) {
       return {
@@ -287,6 +314,7 @@ export async function enrichUrl(rawUrl: string): Promise<EnrichResponse> {
         description: `View company profile on LinkedIn.`,
         summary: `LinkedIn Company Page`,
         image: null,
+        category: "Professional",
       };
     }
     // For posts and jobs, let it fall back or we can provide a default so it doesn't fail entirely
@@ -333,24 +361,38 @@ export async function enrichUrl(rawUrl: string): Promise<EnrichResponse> {
       description: `Link to ${parsedUrl.hostname}`,
       summary: `Link to ${parsedUrl.hostname}`,
       image: null,
+      category: null,
     };
   }
 
   let finalTitle = title;
   let finalDescription = description;
+  let finalSummary = description;
+  let finalCategory = null;
 
-  if (process.env.GEMINI_API_KEY && html) {
-    const aiResult = await summarizeWithAI(extractPlainText(html), title);
+  const apiKey = process.env.NEXT_PUBLIC_GEMINI_API_KEY || process.env.GEMINI_API_KEY;
+
+  if (apiKey && html) {
+    const aiResult = await summarizeWithAI(
+      extractPlainText(html),
+      title,
+      description,
+      existingCategories,
+    );
     if (aiResult) {
       finalTitle = aiResult.title || finalTitle;
-      finalDescription = aiResult.summary || finalDescription;
+      finalSummary = aiResult.summary || finalSummary;
+      finalCategory = aiResult.category || null;
+      // Also update description if summary is better
+      if (aiResult.summary) finalDescription = aiResult.summary;
     }
   }
 
   return {
     title: finalTitle,
     description: finalDescription,
-    summary: finalDescription,
+    summary: finalSummary,
     image,
+    category: finalCategory,
   };
 }

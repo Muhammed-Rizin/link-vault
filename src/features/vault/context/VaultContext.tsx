@@ -229,25 +229,44 @@ export function VaultProvider({
       const response = await fetch("/api/enrich", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ url: formState.url.trim() }),
+        body: JSON.stringify({
+          url: formState.url.trim(),
+          existingCategories,
+        }),
       });
       const payload = (await response.json()) as {
         title?: string | null;
         summary?: string | null;
         description?: string | null;
+        category?: string | null;
       };
       if (!response.ok) throw new Error("enrich_failed");
       const title = payload.title?.trim() || null;
       const summary = payload.summary?.trim() || payload.description?.trim() || null;
+      const suggestedCategory = normalizeCategory(payload.category || "");
+
       if (!title && !summary) {
         setFormError("No metadata was found for this URL.");
         return;
       }
+
       setFormState((prev) => ({
         ...prev,
         title: title ?? prev.title,
         summary: summary ?? prev.summary,
+        category: suggestedCategory || prev.category,
       }));
+
+      // Map suggested category to mode
+      if (suggestedCategory) {
+        if (existingCategories.includes(suggestedCategory)) {
+          setCategoryMode("existing");
+          setNewCategoryName("");
+        } else {
+          setCategoryMode("new");
+          setNewCategoryName(suggestedCategory);
+        }
+      }
     } catch {
       setFormError("Could not enrich this URL right now. You can still add it manually.");
     } finally {
@@ -308,7 +327,12 @@ export function VaultProvider({
         .select("id, title, url, source_url, category, status, summary, created_at")
         .single();
       setIsSubmitting(false);
-      if (error) return setFormError(error.message);
+      if (error) {
+        if (error.code === "23505") {
+          return setFormError("This link has already been added to your vault.");
+        }
+        return setFormError(error.message);
+      }
       setLinks((prev) => sortLinksLatest([data as VaultLink, ...prev]));
       setFormOpen(false);
       resetForm(category);
@@ -332,7 +356,12 @@ export function VaultProvider({
       .select("id, title, url, source_url, category, status, summary, created_at")
       .single();
     setIsSubmitting(false);
-    if (error) return setFormError(error.message);
+    if (error) {
+      if (error.code === "23505") {
+        return setFormError("This link has already been added to your vault.");
+      }
+      return setFormError(error.message);
+    }
     setLinks((prev) =>
       sortLinksLatest(prev.map((item) => (item.id === editingId ? (data as VaultLink) : item))),
     );

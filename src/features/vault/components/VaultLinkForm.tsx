@@ -79,9 +79,7 @@ export function VaultLinkForm() {
                     <div className="flex gap-2">
                       <Input
                         value={formState.url}
-                        onChange={(e) =>
-                          setFormState((prev) => ({ ...prev, url: e.target.value }))
-                        }
+                        onChange={(e) => setFormState((prev) => ({ ...prev, url: e.target.value }))}
                         placeholder="https://example.com/article"
                         required
                       />
@@ -100,9 +98,7 @@ export function VaultLinkForm() {
                     <label className="text-sm font-medium">Title</label>
                     <Input
                       value={formState.title}
-                      onChange={(e) =>
-                        setFormState((prev) => ({ ...prev, title: e.target.value }))
-                      }
+                      onChange={(e) => setFormState((prev) => ({ ...prev, title: e.target.value }))}
                       placeholder="Readable title"
                       required
                     />
@@ -159,11 +155,7 @@ export function VaultLinkForm() {
                       Cancel
                     </Button>
                     <Button type="submit" disabled={isSubmitting}>
-                      {isSubmitting
-                        ? "Saving..."
-                        : formMode === "create"
-                          ? "Save Link"
-                          : "Update Link"}
+                      {isSubmitting ? "Saving..." : formMode === "create" ? "Save" : "Update"}
                     </Button>
                   </div>
                 </form>
