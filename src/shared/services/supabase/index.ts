@@ -1,4 +1,4 @@
-export { createClient as createSupabaseBrowserClient } from "@/lib/supabase/client"
+export { createClient as createSupabaseBrowserClient } from "@/shared/services/supabase/client"
 
 export type VaultStatus = "Backlog" | "Researching" | "Completed" | "Important"
 

@@ -5,9 +5,9 @@ import { AnimatePresence, motion } from "framer-motion"
 import { ArrowRight, Github, Lock, Mail, User } from "lucide-react"
 import { useRouter } from "next/navigation"
 
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { createClient as createSupabaseClient } from "@/lib/supabase/client"
+import { Button } from "@/shared/components/ui/button"
+import { Input } from "@/shared/components/ui/input"
+import { createClient as createSupabaseClient } from "@/shared/services/supabase/client"
 
 type AuthMode = "login" | "signup"
 type OAuthProvider = "google" | "github"
@@ -183,7 +183,7 @@ export function AuthForm({ mode }: AuthFormProps) {
           <p className="text-xs tracking-[0.12em] text-muted-foreground uppercase">
             Elite Developer Access
           </p>
-          <h1 className="font-[family-name:var(--font-geist)] text-2xl font-semibold tracking-tight text-foreground">
+          <h1 className="max-w-md font-(family-name:--font-geist) text-2xl font-semibold tracking-tight text-foreground">
             {isSignup ? "Create Your Vault Account" : "Welcome Back"}
           </h1>
           <p className="text-sm text-muted-foreground">

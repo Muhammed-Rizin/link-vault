@@ -2,7 +2,7 @@ import { createServerClient } from "@supabase/ssr"
 import type { NextRequest } from "next/server"
 import { NextResponse } from "next/server"
 
-import { getSupabaseEnv } from "@/lib/supabase/config"
+import { getSupabaseEnv } from "@/shared/services/supabase/config"
 
 export async function updateSupabaseSession(request: NextRequest) {
   const { supabaseUrl, supabasePublishableKey } = getSupabaseEnv()

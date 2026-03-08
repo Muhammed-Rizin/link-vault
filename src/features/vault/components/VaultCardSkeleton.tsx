@@ -1,7 +1,7 @@
-import { Skeleton } from "@/components/ui/skeleton"
-import { Card, CardContent, CardHeader } from "@/components/ui/card"
+import { Skeleton } from "@/shared/components/ui/skeleton"
+import { Card, CardContent, CardHeader } from "@/shared/components/ui/card"
 
-export function LinkCardSkeleton() {
+export function VaultCardSkeleton() {
   return (
     <Card className="h-full border-border/80 bg-card/80">
       <CardHeader className="pb-2">

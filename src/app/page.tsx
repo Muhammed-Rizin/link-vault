@@ -1,8 +1,8 @@
 import { redirect } from "next/navigation"
 
-import { VaultDashboard } from "@/components/dashboard/vault-dashboard"
-import { type VaultLink } from "@/lib/supabase"
-import { createClient as createSupabaseServerClient } from "@/lib/supabase/server"
+import { VaultDashboardPage as VaultDashboard } from "@/features/vault/pages/VaultDashboardPage";
+import { type VaultLink } from "@/shared/services/supabase";
+import { createClient as createSupabaseServerClient } from "@/shared/services/supabase/server";
 
 const validStatuses = new Set(["Backlog", "Researching", "Completed", "Important"])
 

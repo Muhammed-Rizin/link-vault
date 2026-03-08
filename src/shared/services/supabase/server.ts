@@ -1,7 +1,7 @@
 import { createServerClient } from "@supabase/ssr"
 import { cookies } from "next/headers"
 
-import { getSupabaseEnv } from "@/lib/supabase/config"
+import { getSupabaseEnv } from "@/shared/services/supabase/config"
 
 export async function createClient() {
   const { supabaseUrl, supabasePublishableKey } = getSupabaseEnv()

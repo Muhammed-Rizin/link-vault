@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono, Inter } from "next/font/google";
-import { RegisterServiceWorker } from "@/components/pwa/register-sw";
+import { RegisterServiceWorker } from "@/features/pwa/components/RegisterSW";
 import "./globals.css";
 
 const inter = Inter({

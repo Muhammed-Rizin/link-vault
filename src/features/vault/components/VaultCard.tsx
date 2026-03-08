@@ -4,12 +4,18 @@
 import * as React from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { ExternalLink, MoreHorizontal, Pencil, Trash2 } from "lucide-react";
+import { Button } from "@/shared/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/shared/components/ui/card";
+import { cn } from "@/shared/utils/utils";
+import type { VaultLink } from "@/shared/services/supabase";
 
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import type { VaultLink } from "@/lib/supabase";
-
-type LinkCardProps = {
+type VaultCardProps = {
   link: VaultLink;
   isMenuOpen: boolean;
   onOpenDetails: () => void;
@@ -37,14 +43,14 @@ function getDisplaySourceUrl(url: string) {
   }
 }
 
-export function LinkCard({
+export function VaultCard({
   link,
   isMenuOpen,
   onOpenDetails,
   onToggleMenu,
   onEdit,
   onDelete,
-}: LinkCardProps) {
+}: VaultCardProps) {
   const sourceDomain = getDomain(link.source_url);
   const sourceDisplayUrl = getDisplaySourceUrl(link.source_url);
 
@@ -91,7 +97,10 @@ export function LinkCard({
                 onToggleMenu();
               }}
               aria-label="Link options"
-              className="opacity-0 group-hover:opacity-100 focus:opacity-100 transition-all hover:bg-muted/80"
+              className={cn(
+                "transition-all hover:bg-muted/80",
+                isMenuOpen ? "opacity-100" : "opacity-40 group-hover:opacity-100 focus:opacity-100"
+              )}
             >
               <MoreHorizontal className="size-4" />
             </Button>
@@ -112,7 +121,7 @@ export function LinkCard({
                     className="flex w-full cursor-pointer items-center gap-2.5 rounded-lg px-2.5 py-2 text-left text-[13px] font-medium hover:bg-accent transition-colors"
                   >
                     <Pencil className="size-3.5 opacity-70" />
-                    Edit Details
+                    Edit
                   </button>
                   <button
                     type="button"
@@ -123,7 +132,7 @@ export function LinkCard({
                     className="flex w-full cursor-pointer items-center gap-2.5 rounded-lg px-2.5 py-2 text-left text-[13px] font-medium text-destructive hover:bg-destructive/10 transition-colors"
                   >
                     <Trash2 className="size-3.5 opacity-70" />
-                    Delete Link
+                    Delete
                   </button>
                 </motion.div>
               )}

@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server"
-import { enrichUrl, type EnrichResponse } from "@/lib/services/enrichment.service";
+import { enrichUrl, type EnrichResponse } from "@/features/vault/services/enrichment.service";
 
 export async function POST(request: Request) {
   let body: { url?: string };

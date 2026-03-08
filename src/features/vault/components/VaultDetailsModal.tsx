@@ -4,11 +4,11 @@ import * as React from "react"
 import { AnimatePresence, motion } from "framer-motion"
 import { CalendarDays, X } from "lucide-react";
 
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Skeleton } from "@/components/ui/skeleton"
-import type { VaultLink } from "@/lib/supabase"
+import { Badge } from "@/shared/components/ui/badge"
+import { Button } from "@/shared/components/ui/button"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/components/ui/card"
+import { Skeleton } from "@/shared/components/ui/skeleton"
+import type { VaultLink } from "@/shared/services/supabase"
 
 type LinkDetailsModalProps = {
   link: VaultLink | null
@@ -114,7 +114,7 @@ function EmbedPreviewCard({
   )
 }
 
-export function LinkDetailsModal({ link, onClose }: LinkDetailsModalProps) {
+export function VaultDetailsModal({ link, onClose }: LinkDetailsModalProps) {
   const [previewByUrl, setPreviewByUrl] = React.useState<Record<string, LinkPreview>>({})
   const [loadingByUrl, setLoadingByUrl] = React.useState<Record<string, boolean>>({})
   const [isModalSkeleton, setIsModalSkeleton] = React.useState(false)
