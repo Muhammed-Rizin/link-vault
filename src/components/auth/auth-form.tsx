@@ -46,9 +46,16 @@ function GoogleIcon({ className }: { className?: string }) {
 }
 
 function getOAuthRedirectTo() {
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL;
+
+  if (siteUrl) {
+    return `${siteUrl}/auth/callback`;
+  }
+
   if (typeof window === "undefined") {
     return "http://localhost:3000/auth/callback"
   }
+
   return `${window.location.origin}/auth/callback`
 }
 
