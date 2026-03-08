@@ -19,6 +19,16 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { CategoryPicker } from "@/components/dashboard/category-picker"
 import { LinkCard } from "@/components/dashboard/link-card"
 import { LinkCardSkeleton } from "@/components/dashboard/link-card-skeleton"
@@ -100,6 +110,7 @@ export function VaultDashboard({ initialLinks, userEmail, userAvatarUrl }: Vault
   const [isEnriching, setIsEnriching] = React.useState(false)
   const [isSigningOut, setIsSigningOut] = React.useState(false)
   const [isInitialLoading, setIsInitialLoading] = React.useState(true)
+  const [deletingLink, setDeletingLink] = React.useState<VaultLink | null>(null);
   const [formError, setFormError] = React.useState<string | null>(null)
   const searchRef = React.useRef<HTMLInputElement>(null)
   const openCreateRef = React.useRef<() => void>(() => {})
@@ -272,18 +283,19 @@ export function VaultDashboard({ initialLinks, userEmail, userAvatarUrl }: Vault
     }
   }
 
-  const handleDelete = async (link: VaultLink) => {
-    setMenuOpenId(null)
-    if (!window.confirm(`Delete "${link.title}"?`)) return
-    const previous = links
-    setLinks((prev) => prev.filter((item) => item.id !== link.id))
-    if (selectedLink?.id === link.id) setSelectedLink(null)
-    const { error } = await supabase.from("vault_links").delete().eq("id", link.id)
+  const handleConfirmDelete = async () => {
+    if (!deletingLink) return;
+    const link = deletingLink;
+    setDeletingLink(null);
+    const previous = links;
+    setLinks((prev) => prev.filter((item) => item.id !== link.id));
+    if (selectedLink?.id === link.id) setSelectedLink(null);
+    const { error } = await supabase.from("vault_links").delete().eq("id", link.id);
     if (error) {
-      setLinks(previous)
-      setFormError(error.message)
+      setLinks(previous);
+      setFormError(error.message);
     }
-  }
+  };
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault()
@@ -367,7 +379,7 @@ export function VaultDashboard({ initialLinks, userEmail, userAvatarUrl }: Vault
         <aside
           className={cn(
             "hidden shrink-0 overflow-hidden border-r border-sidebar-border bg-sidebar/95 transition-[width] duration-300 md:flex md:flex-col",
-            collapsed ? "w-[4.4rem]" : "w-72"
+            collapsed ? "w-[4.4rem]" : "w-72",
           )}
         >
           <div className="flex h-14 items-center justify-between border-b border-sidebar-border px-3">
@@ -376,7 +388,11 @@ export function VaultDashboard({ initialLinks, userEmail, userAvatarUrl }: Vault
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src="/icon.svg" alt="Link Vault" className="size-4" />
               </div>
-              {!collapsed && <p className="font-[family-name:var(--font-geist)] text-sm font-medium">Link Vault</p>}
+              {!collapsed && (
+                <p className="font-[family-name:var(--font-geist)] text-sm font-medium">
+                  Link Vault
+                </p>
+              )}
             </div>
             <Button size="icon-sm" variant="ghost" onClick={() => setCollapsed((prev) => !prev)}>
               {collapsed ? <ChevronRight /> : <ChevronLeft />}
@@ -384,9 +400,11 @@ export function VaultDashboard({ initialLinks, userEmail, userAvatarUrl }: Vault
           </div>
 
           <div className="flex flex-1 flex-col gap-2 overflow-y-auto px-2 py-3">
-            {!collapsed && <p className="px-2 text-xs text-muted-foreground uppercase">Categories</p>}
+            {!collapsed && (
+              <p className="px-2 text-xs text-muted-foreground uppercase">Categories</p>
+            )}
             {categories.map((category) => {
-              const active = category === activeCategory
+              const active = category === activeCategory;
               return (
                 <button
                   key={category}
@@ -394,28 +412,41 @@ export function VaultDashboard({ initialLinks, userEmail, userAvatarUrl }: Vault
                   onClick={() => setActiveCategory(category)}
                   className={cn(
                     "flex h-9 items-center gap-2 rounded-lg border border-transparent px-2 text-sm",
-                    active ? "border-border bg-accent text-accent-foreground" : "text-muted-foreground hover:bg-accent/70",
-                    collapsed && "justify-center px-1"
+                    active
+                      ? "border-border bg-accent text-accent-foreground"
+                      : "text-muted-foreground hover:bg-accent/70",
+                    collapsed && "justify-center px-1",
                   )}
                 >
                   <Folders className="size-4 shrink-0" />
                   {!collapsed && (
                     <>
                       <span className="truncate">{category}</span>
-                      <span className="ml-auto text-xs text-muted-foreground">{countsByCategory[category]}</span>
+                      <span className="ml-auto text-xs text-muted-foreground">
+                        {countsByCategory[category]}
+                      </span>
                     </>
                   )}
                 </button>
-              )
+              );
             })}
           </div>
 
           <div className="border-t border-sidebar-border p-3">
-            <div className={cn("rounded-xl border border-border/80 bg-card/70 p-2.5", collapsed && "text-center")}>
+            <div
+              className={cn(
+                "rounded-xl border border-border/80 bg-card/70 p-2.5",
+                collapsed && "text-center",
+              )}
+            >
               <div className={cn("flex items-center gap-2", collapsed && "justify-center")}>
                 {userAvatarUrl ? (
                   // eslint-disable-next-line @next/next/no-img-element
-                  <img src={userAvatarUrl} alt="" className="size-8 rounded-full border border-border/80 object-cover" />
+                  <img
+                    src={userAvatarUrl}
+                    alt=""
+                    className="size-8 rounded-full border border-border/80 object-cover"
+                  />
                 ) : (
                   <div className="grid size-8 place-items-center rounded-full border border-border/80 bg-muted text-xs font-semibold text-muted-foreground">
                     {getInitials(userEmail)}
@@ -457,7 +488,13 @@ export function VaultDashboard({ initialLinks, userEmail, userAvatarUrl }: Vault
               </Button>
               <div className="relative w-full max-w-2xl">
                 <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
-                <Input ref={searchRef} value={query} onChange={(e) => setQuery(e.target.value)} className="h-10 pl-9 pr-16" placeholder="Search links, source URLs, or summaries..." />
+                <Input
+                  ref={searchRef}
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  className="h-10 pl-9 pr-16"
+                  placeholder="Search links, source URLs, or summaries..."
+                />
                 <div className="pointer-events-none absolute top-1/2 right-2 flex -translate-y-1/2 items-center gap-1 rounded-md border border-border/80 bg-background/70 px-1.5 py-0.5 text-xs text-muted-foreground">
                   <Command className="size-3" />
                   <span>K</span>
@@ -471,7 +508,12 @@ export function VaultDashboard({ initialLinks, userEmail, userAvatarUrl }: Vault
 
             <AnimatePresence>
               {mobileCategoriesOpen && (
-                <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} className="mt-3 flex flex-wrap gap-2 md:hidden">
+                <motion.div
+                  initial={{ opacity: 0, y: -8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -8 }}
+                  className="mt-3 flex flex-wrap gap-2 md:hidden"
+                >
                   {categories.map((category) => (
                     <Button
                       key={category}
@@ -479,7 +521,7 @@ export function VaultDashboard({ initialLinks, userEmail, userAvatarUrl }: Vault
                       variant={category === activeCategory ? "secondary" : "ghost"}
                       className="rounded-full"
                       onClick={() => {
-                        setActiveCategory(category)
+                        setActiveCategory(category);
                       }}
                     >
                       {category}
@@ -493,8 +535,12 @@ export function VaultDashboard({ initialLinks, userEmail, userAvatarUrl }: Vault
           <main className="flex-1 overflow-y-auto px-4 py-5 md:px-6">
             <div className="mb-5 flex items-center justify-between">
               <div>
-                <h1 className="font-[family-name:var(--font-geist)] text-2xl font-semibold">Link Vault</h1>
-                <p className="mt-1 text-sm text-muted-foreground">High-signal links sorted by newest first with source provenance.</p>
+                <h1 className="font-[family-name:var(--font-geist)] text-2xl font-semibold">
+                  Link Vault
+                </h1>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  High-signal links sorted by newest first with source provenance.
+                </p>
               </div>
               <Badge variant="outline">{filteredLinks.length} links</Badge>
             </div>
@@ -520,19 +566,26 @@ export function VaultDashboard({ initialLinks, userEmail, userAvatarUrl }: Vault
                         link={link}
                         isMenuOpen={menuOpenId === link.id}
                         onOpenDetails={() => setSelectedLink(link)}
-                        onToggleMenu={() => setMenuOpenId((prev) => (prev === link.id ? null : link.id))}
+                        onToggleMenu={() =>
+                          setMenuOpenId((prev) => (prev === link.id ? null : link.id))
+                        }
                         onEdit={() => openEdit(link)}
-                        onDelete={() => handleDelete(link)}
+                        onDelete={() => {
+                          setMenuOpenId(null);
+                          setDeletingLink(link);
+                        }}
                       />
                     </motion.article>
-                  )
+                  );
                 })}
               </motion.section>
             )}
 
             {!isInitialLoading && !filteredLinks.length && (
               <div className="mt-10 rounded-xl border border-dashed border-border p-8 text-center">
-                <p className="text-sm text-muted-foreground">No links match this filter. Add one with the button above.</p>
+                <p className="text-sm text-muted-foreground">
+                  No links match this filter. Add one with the button above.
+                </p>
               </div>
             )}
           </main>
@@ -543,16 +596,37 @@ export function VaultDashboard({ initialLinks, userEmail, userAvatarUrl }: Vault
 
       <AnimatePresence>
         {formOpen && (
-          <motion.div className="fixed inset-0 z-50 grid place-items-center bg-black/55 px-4 backdrop-blur-sm" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-            <motion.div initial={{ opacity: 0, y: 10, scale: 0.99 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: 8, scale: 0.99 }} className="w-full max-w-xl">
+          <motion.div
+            className="fixed inset-0 z-50 grid place-items-center bg-black/55 px-4 backdrop-blur-sm"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+          >
+            <motion.div
+              initial={{ opacity: 0, y: 10, scale: 0.99 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 8, scale: 0.99 }}
+              className="w-full max-w-xl"
+            >
               <Card className="border-border/80 bg-card">
                 <CardHeader>
                   <div className="flex items-start justify-between gap-4">
                     <div>
-                      <CardTitle>{formMode === "create" ? "Add Link To Vault" : "Edit Link"}</CardTitle>
-                      <CardDescription>Save URL, source URL, dynamic category, and summary.</CardDescription>
+                      <CardTitle>
+                        {formMode === "create" ? "Add Link To Vault" : "Edit Link"}
+                      </CardTitle>
+                      <CardDescription>
+                        Save URL, source URL, dynamic category, and summary.
+                      </CardDescription>
                     </div>
-                    <Button size="icon-sm" variant="ghost" onClick={() => { setFormOpen(false); resetForm() }}>
+                    <Button
+                      size="icon-sm"
+                      variant="ghost"
+                      onClick={() => {
+                        setFormOpen(false);
+                        resetForm();
+                      }}
+                    >
                       <X />
                     </Button>
                   </div>
@@ -562,8 +636,20 @@ export function VaultDashboard({ initialLinks, userEmail, userAvatarUrl }: Vault
                     <div className="space-y-2">
                       <label className="text-sm font-medium">URL</label>
                       <div className="flex gap-2">
-                        <Input value={formState.url} onChange={(e) => setFormState((prev) => ({ ...prev, url: e.target.value }))} placeholder="https://example.com/article" required />
-                        <Button type="button" variant="outline" onClick={handleAutoEnrich} disabled={isEnriching}>
+                        <Input
+                          value={formState.url}
+                          onChange={(e) =>
+                            setFormState((prev) => ({ ...prev, url: e.target.value }))
+                          }
+                          placeholder="https://example.com/article"
+                          required
+                        />
+                        <Button
+                          type="button"
+                          variant="outline"
+                          onClick={handleAutoEnrich}
+                          disabled={isEnriching}
+                        >
                           {isEnriching ? "Enriching..." : "Auto Enrich"}
                         </Button>
                       </div>
@@ -571,12 +657,26 @@ export function VaultDashboard({ initialLinks, userEmail, userAvatarUrl }: Vault
 
                     <div className="space-y-2">
                       <label className="text-sm font-medium">Title</label>
-                      <Input value={formState.title} onChange={(e) => setFormState((prev) => ({ ...prev, title: e.target.value }))} placeholder="Readable title" required />
+                      <Input
+                        value={formState.title}
+                        onChange={(e) =>
+                          setFormState((prev) => ({ ...prev, title: e.target.value }))
+                        }
+                        placeholder="Readable title"
+                        required
+                      />
                     </div>
 
                     <div className="space-y-2">
                       <label className="text-sm font-medium">Source URL</label>
-                      <Input value={formState.sourceUrl} onChange={(e) => setFormState((prev) => ({ ...prev, sourceUrl: e.target.value }))} placeholder="https://instagram.com/..." required />
+                      <Input
+                        value={formState.sourceUrl}
+                        onChange={(e) =>
+                          setFormState((prev) => ({ ...prev, sourceUrl: e.target.value }))
+                        }
+                        placeholder="https://instagram.com/..."
+                        required
+                      />
                     </div>
 
                     <CategoryPicker
@@ -593,14 +693,37 @@ export function VaultDashboard({ initialLinks, userEmail, userAvatarUrl }: Vault
 
                     <div className="space-y-2">
                       <label className="text-sm font-medium">Summary (Optional)</label>
-                      <textarea value={formState.summary} onChange={(e) => setFormState((prev) => ({ ...prev, summary: e.target.value }))} rows={4} className="w-full rounded-lg border border-input/80 bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus-visible:border-ring focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40" placeholder="Auto-Enrich can populate this from the URL." />
+                      <textarea
+                        value={formState.summary}
+                        onChange={(e) =>
+                          setFormState((prev) => ({ ...prev, summary: e.target.value }))
+                        }
+                        rows={4}
+                        className="w-full rounded-lg border border-input/80 bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus-visible:border-ring focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
+                        placeholder="Auto-Enrich can populate this from the URL."
+                      />
                     </div>
 
                     {formError && <p className="text-sm text-destructive">{formError}</p>}
 
                     <div className="flex items-center justify-end gap-2">
-                      <Button type="button" variant="ghost" onClick={() => { setFormOpen(false); resetForm() }}>Cancel</Button>
-                      <Button type="submit" disabled={isSubmitting}>{isSubmitting ? "Saving..." : formMode === "create" ? "Save Link" : "Update Link"}</Button>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        onClick={() => {
+                          setFormOpen(false);
+                          resetForm();
+                        }}
+                      >
+                        Cancel
+                      </Button>
+                      <Button type="submit" disabled={isSubmitting}>
+                        {isSubmitting
+                          ? "Saving..."
+                          : formMode === "create"
+                            ? "Save Link"
+                            : "Update Link"}
+                      </Button>
                     </div>
                   </form>
                 </CardContent>
@@ -609,6 +732,27 @@ export function VaultDashboard({ initialLinks, userEmail, userAvatarUrl }: Vault
           </motion.div>
         )}
       </AnimatePresence>
+
+      <AlertDialog open={!!deletingLink} onOpenChange={(open) => !open && setDeletingLink(null)}>
+        <AlertDialogContent className="border-border/80 bg-card">
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. This will permanently delete the link &quot;
+              {deletingLink?.title}&quot; from your vault.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleConfirmDelete}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Delete permanently
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
-  )
+  );
 }
