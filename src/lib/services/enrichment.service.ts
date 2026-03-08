@@ -5,6 +5,58 @@ export type EnrichResponse = {
   image: string | null;
 };
 
+function extractPlainText(html: string): string {
+  let text = html.replace(/<script[^>]*>[\s\S]*?<\/script>/gi, "");
+  text = text.replace(/<style[^>]*>[\s\S]*?<\/style>/gi, "");
+  text = text.replace(/<[^>]+>/g, " ");
+  return text.replace(/\s+/g, " ").trim().substring(0, 15000);
+}
+
+async function summarizeWithAI(
+  text: string,
+  defaultTitle: string | null,
+): Promise<{ title: string; summary: string } | null> {
+  const apiKey = process.env.NEXT_PUBLIC_GEMINI_API_KEY;
+  if (!apiKey) return null;
+
+  try {
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
+    const response = await import("next/server").then(() =>
+      fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          contents: [
+            {
+              parts: [
+                {
+                  text: `Analyze the following webpage extracted text. Extract or generate a clean, accurate Title (Heading) and a short Summary (1-2 sentences) of the content.
+Return ONLY a valid JSON object strictly matching this format: {"title": "The Title", "summary": "The summary here."}
+If you can't determine it, use "${defaultTitle || "Unknown"}" as title.
+
+Webpage Text:
+${text}`,
+                },
+              ],
+            },
+          ],
+        }),
+      }),
+    );
+
+    if (!response.ok) return null;
+    const data = await response.json();
+    const resultText = data.candidates?.[0]?.content?.parts?.[0]?.text;
+    if (resultText) {
+      const jsonMatch = resultText.match(/\{[\s\S]*\}/);
+      if (jsonMatch) return JSON.parse(jsonMatch[0]);
+    }
+  } catch (e) {
+    console.error("AI Enrichment Error:", e);
+  }
+  return null;
+}
+
 function cleanContent(value: string | null) {
   if (!value) return null;
   return decodeHtmlEntities(value).replace(/\s+/g, " ").trim() || null;
@@ -134,17 +186,17 @@ export async function enrichUrl(rawUrl: string): Promise<EnrichResponse> {
   ) {
     try {
       // Use Microlink API to securely bypass login walls and extract rich OpenGraph data
-      const mlUrl = `https://api.microlink.io/?url=${encodeURIComponent(rawUrl)}`
-      const mlResponse = await fetchWithTimeout(mlUrl)
+      const mlUrl = `https://api.microlink.io/?url=${encodeURIComponent(rawUrl)}`;
+      const mlResponse = await fetchWithTimeout(mlUrl);
       if (mlResponse.ok) {
-        const { data } = await mlResponse.json()
+        const { data } = await mlResponse.json();
         if (data && (data.title || data.description)) {
           return {
             title: data.title || "Social Media Post",
             description: data.description || "View this content directly on the app",
             summary: data.description || "Social Media Link",
             image: data.image?.url || null,
-          }
+          };
         }
       }
     } catch {
@@ -152,10 +204,13 @@ export async function enrichUrl(rawUrl: string): Promise<EnrichResponse> {
     }
 
     if (parsedUrl.hostname.includes("instagram.com") || parsedUrl.hostname.includes("instagr.am")) {
-      const paths = parsedUrl.pathname.split("/").filter(Boolean)
-      const isPost = paths[0] === "p" || paths[0] === "reel" || paths[0] === "reels" || paths[0] === "tv"
+      const paths = parsedUrl.pathname.split("/").filter(Boolean);
+      const isPost =
+        paths[0] === "p" || paths[0] === "reel" || paths[0] === "reels" || paths[0] === "tv";
       const isProfile =
-        !isPost && paths.length > 0 && !["explore", "reels", "stories", "direct"].includes(paths[0])
+        !isPost &&
+        paths.length > 0 &&
+        !["explore", "reels", "stories", "direct"].includes(paths[0]);
 
       if (isProfile) {
         return {
@@ -163,21 +218,21 @@ export async function enrichUrl(rawUrl: string): Promise<EnrichResponse> {
           description: `View @${paths[0]}'s profile, posts, and reels on Instagram.`,
           summary: `Instagram profile for @${paths[0]}`,
           image: null,
-        }
+        };
       } else if (isPost && paths[1]) {
         return {
           title: "Instagram Post",
           description: `View this post on Instagram.`,
           summary: `Instagram post ID: ${paths[1]}`,
           image: null,
-        }
+        };
       } else {
         return {
           title: "Instagram",
           description: "View on Instagram",
           summary: "Instagram Link",
           image: null,
-        }
+        };
       }
     }
   }
@@ -281,10 +336,21 @@ export async function enrichUrl(rawUrl: string): Promise<EnrichResponse> {
     };
   }
 
+  let finalTitle = title;
+  let finalDescription = description;
+
+  if (process.env.GEMINI_API_KEY && html) {
+    const aiResult = await summarizeWithAI(extractPlainText(html), title);
+    if (aiResult) {
+      finalTitle = aiResult.title || finalTitle;
+      finalDescription = aiResult.summary || finalDescription;
+    }
+  }
+
   return {
-    title,
-    description,
-    summary: description,
+    title: finalTitle,
+    description: finalDescription,
+    summary: finalDescription,
     image,
   };
 }
