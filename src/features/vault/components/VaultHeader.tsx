@@ -5,6 +5,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { Command, Menu, Plus, Search, X } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
+import { cn } from "@/shared/utils/utils";
 import { useVault } from "../context/VaultContext";
 
 export function VaultHeader() {
@@ -87,24 +88,35 @@ export function VaultHeader() {
       <AnimatePresence>
         {mobileCategoriesOpen && (
           <motion.div
-            initial={{ opacity: 0, y: -8 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -8 }}
-            className="mt-3 flex flex-wrap gap-2 md:hidden"
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            exit={{ opacity: 0, height: 0 }}
+            className="overflow-hidden"
           >
-            {categories.map((category) => (
-              <Button
-                key={category}
-                size="sm"
-                variant={category === activeCategory ? "secondary" : "ghost"}
-                className="rounded-full"
-                onClick={() => {
-                  setActiveCategory(category);
-                }}
-              >
-                {category}
-              </Button>
-            ))}
+            <div className="mt-2 md:hidden">
+              <div className="no-scrollbar flex overflow-x-auto scroll-smooth py-1 focus-visible:outline-none">
+                <div className="flex gap-2 px-1">
+                  {categories.map((category) => (
+                    <Button
+                      key={category}
+                      size="sm"
+                      variant={category === activeCategory ? "secondary" : "ghost"}
+                      className={cn(
+                        "h-8 shrink-0 rounded-full px-4 text-xs font-semibold whitespace-nowrap transition-all",
+                        category === activeCategory
+                          ? "bg-primary text-primary-foreground hover:bg-primary" // No change on hover
+                          : "bg-muted/40 hover:bg-muted text-muted-foreground hover:text-foreground",
+                      )}
+                      onClick={() => {
+                        setActiveCategory(category);
+                      }}
+                    >
+                      {category}
+                    </Button>
+                  ))}
+                </div>
+              </div>
+            </div>
           </motion.div>
         )}
       </AnimatePresence>
