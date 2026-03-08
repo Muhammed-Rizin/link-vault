@@ -2,7 +2,7 @@
 
 import * as React from "react"
 import { AnimatePresence, motion } from "framer-motion"
-import { CalendarDays, Globe, X } from "lucide-react"
+import { CalendarDays, X } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -206,14 +206,21 @@ export function LinkDetailsModal({ link, onClose }: LinkDetailsModalProps) {
                       className="mt-1 size-9 rounded-md border border-border/80 bg-background p-1"
                     />
                     <div className="min-w-0">
-                      <CardTitle className="text-balance text-lg sm:text-xl">{link.title}</CardTitle>
+                      <CardTitle className="text-balance text-lg sm:text-xl">
+                        {link.title}
+                      </CardTitle>
                       <CardDescription className="mt-1 flex items-center gap-1">
-                        <Globe className="size-3.5" />
+                        {/* <Globe className="size-3.5" /> */}
                         {getDomain(link.url)}
                       </CardDescription>
                     </div>
                   </div>
-                  <Button size="icon-sm" variant="ghost" onClick={onClose} aria-label="Close details">
+                  <Button
+                    size="icon-sm"
+                    variant="ghost"
+                    onClick={onClose}
+                    aria-label="Close details"
+                  >
                     <X />
                   </Button>
                 </div>
@@ -275,5 +282,5 @@ export function LinkDetailsModal({ link, onClose }: LinkDetailsModalProps) {
         </motion.div>
       )}
     </AnimatePresence>
-  )
+  );
 }

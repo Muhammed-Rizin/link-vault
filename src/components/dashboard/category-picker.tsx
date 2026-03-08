@@ -73,17 +73,12 @@ export function CategoryPicker({
   onSelectedCategoryChange,
   onNewCategoryNameChange,
 }: CategoryPickerProps) {
-  const [menuPortalTarget, setMenuPortalTarget] = React.useState<HTMLElement | null>(null)
-  const [inputValue, setInputValue] = React.useState("")
+  const [menuPortalTarget, setMenuPortalTarget] = React.useState<HTMLElement | null>(null);
   const currentValue = categoryMode === "new" ? newCategoryName : selectedCategory
 
   React.useEffect(() => {
     setMenuPortalTarget(document.body)
   }, [])
-
-  React.useEffect(() => {
-    setInputValue("")
-  }, [currentValue])
 
   const options = React.useMemo<CategoryOption[]>(
     () => existingCategories.map((category) => ({ value: category, label: category })),
@@ -97,51 +92,32 @@ export function CategoryPicker({
   }, [currentValue])
 
   const handleSelectChange = (option: SingleValue<CategoryOption>) => {
-    if (!option) return
-    setInputValue("")
-    const matched = existingCategories.find((category) => category === option.value)
-    if (matched) {
-      onCategoryModeChange("existing")
-      onSelectedCategoryChange(matched)
-      onNewCategoryNameChange("")
-      return
+    if (!option) {
+      onCategoryModeChange("existing");
+      onSelectedCategoryChange("");
+      onNewCategoryNameChange("");
+      return;
     }
-    onCategoryModeChange("new")
-    onNewCategoryNameChange(option.value)
-    onSelectedCategoryChange("")
+
+    const matched = existingCategories.find((category) => category === option.value);
+    if (matched) {
+      onCategoryModeChange("existing");
+      onSelectedCategoryChange(matched);
+      onNewCategoryNameChange("");
+    } else {
+      onCategoryModeChange("new");
+      onNewCategoryNameChange(option.value);
+      onSelectedCategoryChange("");
+    }
   }
 
   const handleCreateOption = (inputValue: string) => {
-    const nextValue = normalize(inputValue)
-    if (!nextValue) return
-    setInputValue("")
-    const matched = existingCategories.find((category) => normalize(category) === normalize(nextValue))
-    if (matched) {
-      onCategoryModeChange("existing")
-      onSelectedCategoryChange(matched)
-      onNewCategoryNameChange("")
-      return
-    }
-    onCategoryModeChange("new")
-    onNewCategoryNameChange(nextValue)
-    onSelectedCategoryChange("")
-  }
-
-  const handleInputChange = (nextInput: string) => {
-    setInputValue(nextInput)
-    const normalizedInput = normalize(nextInput)
-    if (!normalizedInput) return
-    const matched = existingCategories.find((category) => normalize(category) === normalizedInput)
-    if (matched) {
-      onCategoryModeChange("existing")
-      onSelectedCategoryChange(matched)
-      onNewCategoryNameChange("")
-      return
-    }
-    onCategoryModeChange("new")
-    onNewCategoryNameChange(normalizedInput)
-    onSelectedCategoryChange("")
-  }
+    const nextValue = normalize(inputValue);
+    if (!nextValue) return;
+    onCategoryModeChange("new");
+    onNewCategoryNameChange(nextValue);
+    onSelectedCategoryChange("");
+  };
 
   return (
     <div className="space-y-2">
@@ -150,8 +126,6 @@ export function CategoryPicker({
         value={selectedOption}
         onChange={handleSelectChange}
         onCreateOption={handleCreateOption}
-        onInputChange={handleInputChange}
-        inputValue={inputValue}
         options={options}
         styles={selectStyles}
         menuPortalTarget={menuPortalTarget ?? undefined}
@@ -161,10 +135,12 @@ export function CategoryPicker({
         noOptionsMessage={({ inputValue: search }) =>
           search ? `No category found. Create "${search}"` : "Type to search categories"
         }
-        isClearable={false}
+        isClearable={true}
         isSearchable
       />
-      <p className="text-xs text-muted-foreground">Search existing categories or create a new one.</p>
+      <p className="text-xs text-muted-foreground">
+        Search existing categories or create a new one.
+      </p>
     </div>
-  )
+  );
 }

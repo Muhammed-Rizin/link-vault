@@ -19,7 +19,7 @@ export default async function Home() {
   const { data, error } = await supabase
     .from("vault_links")
     .select("id, title, url, source_url, category, status, summary, created_at")
-    .order("created_at", { ascending: false })
+    .order("created_at", { ascending: false });
 
   if (error) {
     console.error("Failed to fetch vault links", error.message)
@@ -34,7 +34,7 @@ export default async function Home() {
     status: validStatuses.has(row.status) ? row.status : "Backlog",
     summary: row.summary,
     created_at: row.created_at,
-  }))
+  }));
 
   return (
     <VaultDashboard

@@ -3,6 +3,7 @@
 import * as React from "react"
 import { AnimatePresence, motion, type Variants } from "framer-motion";
 import {
+  AlertTriangle,
   ChevronLeft,
   ChevronRight,
   Command,
@@ -12,7 +13,7 @@ import {
   Plus,
   Search,
   X,
-} from "lucide-react"
+} from "lucide-react";
 import { useRouter } from "next/navigation"
 
 import { Badge } from "@/components/ui/badge"
@@ -27,6 +28,7 @@ import {
   AlertDialogDescription,
   AlertDialogFooter,
   AlertDialogHeader,
+  AlertDialogMedia,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { CategoryPicker } from "@/components/dashboard/category-picker"
@@ -55,12 +57,12 @@ type VaultDashboardProps = {
 type FormMode = "create" | "edit"
 
 type LinkFormState = {
-  title: string
-  url: string
-  sourceUrl: string
-  category: string
-  summary: string
-}
+  title: string;
+  url: string;
+  sourceUrl: string;
+  category: string;
+  summary: string;
+};
 
 function normalizeCategory(value: string) {
   return value.replace(/\s+/g, " ").trim()
@@ -81,7 +83,13 @@ function getInitials(email: string) {
 
 function toFormState(link?: VaultLink, fallbackCategory = "AI Coding"): LinkFormState {
   if (!link) {
-    return { title: "", url: "", sourceUrl: "", category: fallbackCategory, summary: "" }
+    return {
+      title: "",
+      url: "",
+      sourceUrl: "",
+      category: fallbackCategory,
+      summary: "",
+    };
   }
   return {
     title: link.title,
@@ -89,7 +97,7 @@ function toFormState(link?: VaultLink, fallbackCategory = "AI Coding"): LinkForm
     sourceUrl: link.source_url,
     category: link.category,
     summary: link.summary ?? "",
-  }
+  };
 }
 
 export function VaultDashboard({ initialLinks, userEmail, userAvatarUrl }: VaultDashboardProps) {
@@ -260,13 +268,14 @@ export function VaultDashboard({ initialLinks, userEmail, userAvatarUrl }: Vault
         body: JSON.stringify({ url: formState.url.trim() }),
       })
       const payload = (await response.json()) as {
-        title?: string | null
-        summary?: string | null
-        description?: string | null
-      }
+        title?: string | null;
+        summary?: string | null;
+        description?: string | null;
+        image?: string | null;
+      };
       if (!response.ok) throw new Error("enrich_failed")
       const title = payload.title?.trim() || null
-      const summary = payload.summary?.trim() || payload.description?.trim() || null
+      const summary = payload.summary?.trim() || payload.description?.trim() || null;
       if (!title && !summary) {
         setFormError("No metadata was found for this URL.")
         return
@@ -275,7 +284,7 @@ export function VaultDashboard({ initialLinks, userEmail, userAvatarUrl }: Vault
         ...prev,
         title: title ?? prev.title,
         summary: summary ?? prev.summary,
-      }))
+      }));
     } catch {
       setFormError("Could not enrich this URL right now. You can still add it manually.")
     } finally {
@@ -329,7 +338,7 @@ export function VaultDashboard({ initialLinks, userEmail, userAvatarUrl }: Vault
           summary: formState.summary.trim() || null,
         })
         .select("id, title, url, source_url, category, status, summary, created_at")
-        .single()
+        .single();
       setIsSubmitting(false)
       if (error) return setFormError(error.message)
       setLinks((prev) => sortLinksLatest([data as VaultLink, ...prev]))
@@ -353,7 +362,7 @@ export function VaultDashboard({ initialLinks, userEmail, userAvatarUrl }: Vault
       })
       .eq("id", editingId)
       .select("id, title, url, source_url, category, status, summary, created_at")
-      .single()
+      .single();
     setIsSubmitting(false)
     if (error) return setFormError(error.message)
     setLinks((prev) =>
@@ -736,10 +745,13 @@ export function VaultDashboard({ initialLinks, userEmail, userAvatarUrl }: Vault
       <AlertDialog open={!!deletingLink} onOpenChange={(open) => !open && setDeletingLink(null)}>
         <AlertDialogContent className="border-border/80 bg-card">
           <AlertDialogHeader>
-            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This action cannot be undone. This will permanently delete the link &quot;
-              {deletingLink?.title}&quot; from your vault.
+            <AlertDialogMedia className="bg-destructive/15 text-destructive">
+              <AlertTriangle className="size-5" />
+            </AlertDialogMedia>
+            <AlertDialogTitle>Delete Link Permanently?</AlertDialogTitle>
+            <AlertDialogDescription className="text-balance">
+              This action cannot be undone. This will permanently remove &quot;{deletingLink?.title}
+              &quot; and its associated metadata from your vault.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -748,7 +760,7 @@ export function VaultDashboard({ initialLinks, userEmail, userAvatarUrl }: Vault
               onClick={handleConfirmDelete}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
-              Delete permanently
+              Delete Link
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
