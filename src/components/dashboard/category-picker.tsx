@@ -75,6 +75,7 @@ export function CategoryPicker({
 }: CategoryPickerProps) {
   const [menuPortalTarget, setMenuPortalTarget] = React.useState<HTMLElement | null>(null)
   const [inputValue, setInputValue] = React.useState("")
+  const currentValue = categoryMode === "new" ? newCategoryName : selectedCategory
 
   React.useEffect(() => {
     setMenuPortalTarget(document.body)
@@ -88,8 +89,6 @@ export function CategoryPicker({
     () => existingCategories.map((category) => ({ value: category, label: category })),
     [existingCategories]
   )
-
-  const currentValue = categoryMode === "new" ? newCategoryName : selectedCategory
 
   const selectedOption = React.useMemo<CategoryOption | null>(() => {
     const normalized = normalize(currentValue)

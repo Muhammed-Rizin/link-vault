@@ -102,21 +102,11 @@ export function VaultDashboard({ initialLinks, userEmail, userAvatarUrl }: Vault
   const [isInitialLoading, setIsInitialLoading] = React.useState(true)
   const [formError, setFormError] = React.useState<string | null>(null)
   const searchRef = React.useRef<HTMLInputElement>(null)
+  const openCreateRef = React.useRef<() => void>(() => {})
   const supabase = React.useMemo(() => createSupabaseBrowserClient(), [])
   const router = useRouter()
 
   React.useEffect(() => setLinks(sortLinksLatest(initialLinks)), [initialLinks])
-
-  React.useEffect(() => {
-    const handler = (event: KeyboardEvent) => {
-      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "k") {
-        event.preventDefault()
-        searchRef.current?.focus()
-      }
-    }
-    window.addEventListener("keydown", handler)
-    return () => window.removeEventListener("keydown", handler)
-  }, [])
 
   React.useEffect(() => {
     const closeMenu = (event: PointerEvent) => {
@@ -195,6 +185,38 @@ export function VaultDashboard({ initialLinks, userEmail, userAvatarUrl }: Vault
     }
     setFormOpen(true)
   }
+  openCreateRef.current = openCreate
+
+  React.useEffect(() => {
+    const isTypingTarget = (target: EventTarget | null) => {
+      const element = target as HTMLElement | null
+      if (!element) return false
+      const tagName = element.tagName
+      return (
+        element.isContentEditable ||
+        tagName === "INPUT" ||
+        tagName === "TEXTAREA" ||
+        tagName === "SELECT"
+      )
+    }
+
+    const handler = (event: KeyboardEvent) => {
+      if (isTypingTarget(event.target)) return
+
+      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "k") {
+        event.preventDefault()
+        searchRef.current?.focus()
+        return
+      }
+
+      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "n") {
+        event.preventDefault()
+        if (!formOpen) openCreateRef.current()
+      }
+    }
+    window.addEventListener("keydown", handler)
+    return () => window.removeEventListener("keydown", handler)
+  }, [formOpen])
 
   const openEdit = (link: VaultLink) => {
     setFormMode("edit")
