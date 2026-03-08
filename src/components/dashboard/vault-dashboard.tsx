@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { AnimatePresence, motion } from "framer-motion"
+import { AnimatePresence, motion, type Variants } from "framer-motion";
 import {
   ChevronLeft,
   ChevronRight,
@@ -26,15 +26,15 @@ import { LinkDetailsModal } from "@/components/dashboard/link-details-modal"
 import { createSupabaseBrowserClient, type VaultLink } from "@/lib/supabase"
 import { cn } from "@/lib/utils"
 
-const listVariants = {
+const listVariants: Variants = {
   hidden: {},
   show: { transition: { staggerChildren: 0.05, delayChildren: 0.03 } },
-}
+};
 
-const itemVariants = {
+const itemVariants: Variants = {
   hidden: { opacity: 0, y: 10 },
   show: { opacity: 1, y: 0, transition: { duration: 0.22, ease: "easeOut" } },
-}
+};
 
 type VaultDashboardProps = {
   initialLinks: VaultLink[]
