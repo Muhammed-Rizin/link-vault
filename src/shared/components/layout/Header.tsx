@@ -6,9 +6,9 @@ import { Command, Menu, Plus, Search, X } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
 import { cn } from "@/shared/utils/utils";
-import { useVault } from "../context/VaultContext";
+import { useVault } from "@/features/vault/context/VaultContext";
 
-export function VaultHeader() {
+export function Header() {
   const {
     mobileCategoriesOpen,
     setMobileCategoriesOpen,

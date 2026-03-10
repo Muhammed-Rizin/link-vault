@@ -1,13 +1,13 @@
 "use client";
 
 import * as React from "react";
-import { VaultProvider, useVault } from "../context/VaultContext";
-import { VaultSidebar } from "../components/VaultSidebar";
-import { VaultHeader } from "../components/VaultHeader";
-import { VaultGrid } from "../components/VaultGrid";
-import { VaultLinkForm } from "../components/VaultLinkForm";
-import { VaultDeleteDialog } from "../components/VaultDeleteDialog";
-import { VaultDetailsModal } from "../components/VaultDetailsModal";
+import { VaultProvider, useVault } from "@/features/vault/context/VaultContext";
+import { Sidebar } from "@/shared/components/layout/Sidebar";
+import { Header } from "@/shared/components/layout/Header";
+import { VaultGrid } from "@/features/vault/components/VaultGrid";
+import { VaultLinkForm } from "@/features/vault/components/VaultLinkForm";
+import { VaultDeleteDialog } from "@/features/vault/components/VaultDeleteDialog";
+import { VaultDetailsModal } from "@/features/vault/components/VaultDetailsModal";
 import type { VaultLink } from "@/shared/services/supabase";
 
 interface VaultDashboardPageProps {
@@ -22,9 +22,9 @@ function VaultDashboardContent({ userEmail, userAvatarUrl }: { userEmail: string
   return (
     <div className="h-screen w-full overflow-hidden bg-background text-foreground">
       <div className="flex h-full w-full overflow-hidden">
-        <VaultSidebar userEmail={userEmail} userAvatarUrl={userAvatarUrl} />
+        <Sidebar userEmail={userEmail} userAvatarUrl={userAvatarUrl} />
         <div className="flex h-full min-w-0 flex-1 flex-col overflow-hidden">
-          <VaultHeader />
+          <Header />
           <VaultGrid />
         </div>
       </div>
