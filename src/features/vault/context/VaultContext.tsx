@@ -340,8 +340,10 @@ export function VaultProvider({
 
     setIsSubmitting(true);
     if (formMode === "create") {
-      // Find max position to put new link at the end
-      const maxPos = links.reduce((max, l) => Math.max(max, l.position ?? 0), 0);
+      // Find max position to put new link at the end (maintaining order)
+      const maxPos = links.length > 0 
+        ? Math.max(...links.map(l => l.position ?? 0)) 
+        : 0;
       
       const { data, error } = await supabase
         .from("vault_links")
@@ -353,7 +355,7 @@ export function VaultProvider({
           status: "Backlog",
           summary: formState.summary.trim() || null,
           youtube_id: formState.youtubeId || null,
-          position: maxPos + 1024, // High number for end of list
+          position: maxPos + 1024, // Append to the end of the manual order
         })
         .select("id, title, url, source_url, category, status, summary, created_at, youtube_id, position")
         .single();

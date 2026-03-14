@@ -102,7 +102,7 @@ export function VaultGrid() {
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: {
-        distance: 5,
+        distance: 12, // Increased for mobile stability
       },
     }),
     useSensor(KeyboardSensor, {

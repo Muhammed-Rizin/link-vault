@@ -8,6 +8,7 @@ import { VaultGrid } from "@/features/vault/components/VaultGrid";
 import { VaultLinkForm } from "@/features/vault/components/VaultLinkForm";
 import { VaultDeleteDialog } from "@/features/vault/components/VaultDeleteDialog";
 import { VaultDetailsModal } from "@/features/vault/components/VaultDetailsModal";
+import { PullToRefresh } from "@/shared/components/ui/PullToRefresh";
 import type { VaultLink } from "@/shared/services/supabase";
 
 interface VaultDashboardPageProps {
@@ -21,6 +22,7 @@ function VaultDashboardContent({ userEmail, userAvatarUrl }: { userEmail: string
 
   return (
     <div className="h-screen w-full overflow-hidden bg-background text-foreground">
+      <PullToRefresh onRefresh={() => window.location.reload()} />
       <div className="flex h-full w-full overflow-hidden">
         <Sidebar userEmail={userEmail} userAvatarUrl={userAvatarUrl} />
         <div className="flex h-full min-w-0 flex-1 flex-col overflow-hidden">
