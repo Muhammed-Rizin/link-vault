@@ -28,6 +28,7 @@ interface VaultContextType {
   isInitialLoading: boolean;
   isSubmitting: boolean;
   isEnriching: boolean;
+  isReordering: boolean; // Added feedback state
   isSigningOut: boolean;
   selectedLink: VaultLink | null;
   deletingLink: VaultLink | null;
@@ -132,6 +133,7 @@ export function VaultProvider({
   const [newCategoryName, setNewCategoryName] = React.useState("");
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [isEnriching, setIsEnriching] = React.useState(false);
+  const [isReordering, setIsReordering] = React.useState(false);
   const [isSigningOut, setIsSigningOut] = React.useState(false);
   const [isInitialLoading, setIsInitialLoading] = React.useState(true);
   const [deletingLink, setDeletingLink] = React.useState<VaultLink | null>(null);
@@ -402,51 +404,59 @@ export function VaultProvider({
   };
 
   const handleReorder = async (activeId: string, overId: string) => {
-    // 1. Identify indices in the MASTER links array, not just the filtered view
     const oldIndex = links.findIndex((l) => l.id === activeId);
     const newIndex = links.findIndex((l) => l.id === overId);
     
-    if (oldIndex === -1 || newIndex === -1 || oldIndex === newIndex) {
-      console.log(`[Reorder] Invalid move indices: ${oldIndex} -> ${newIndex}`);
-      return;
-    }
+    if (oldIndex === -1 || newIndex === -1 || oldIndex === newIndex) return;
 
-    // 2. Perform the movement using array-move logic
+    // 1. Local optimistic update
     const newLinks = [...links];
     const [movedItem] = newLinks.splice(oldIndex, 1);
     newLinks.splice(newIndex, 0, movedItem);
 
-    // 3. Calculate new fractional position
+    // 2. Position calculation with re-indexing for collisions (position: 0 case)
+    const prevItem = newLinks[newIndex - 1];
+    const nextItem = newLinks[newIndex + 1];
+
     let newPos: number;
-    if (newIndex === 0) {
-      newPos = (newLinks[1]?.position ?? 0) - 10000;
-    } else if (newIndex === newLinks.length - 1) {
-      newPos = (newLinks[newIndex - 1]?.position ?? 0) + 10000;
+    const prevPos = prevItem?.position ?? null;
+    const nextPos = nextItem?.position ?? null;
+
+    if (prevPos === null) {
+      // Dropped at the very beginning
+      newPos = (nextPos ?? 0) - 1024;
+    } else if (nextPos === null) {
+      // Dropped at the very end
+      newPos = prevPos + 1024;
+    } else if (prevPos === nextPos) {
+      // COLLISION DETECTED (e.g. both are 0) -> Force a gap by re-indexing the whole list
+      console.warn("[DnD] Position collision detected. Re-indexing entire set.");
+      newLinks.forEach((link, idx) => {
+        link.position = idx * 1024;
+      });
+      newPos = movedItem.position; // Position already set in forEach
     } else {
-      const prevPos = newLinks[newIndex - 1].position ?? 0;
-      const nextPos = newLinks[newIndex + 1].position ?? 0;
+      // Standard fractional gap
       newPos = (prevPos + nextPos) / 2;
     }
 
-    console.log(`[Reorder] Persisting item ${activeId} to new position ${newPos}`);
-
-    // 4. Update the actual item reference
     movedItem.position = newPos;
 
-    // 5. CRITICAL: Update the state with a new array reference AND force a refresh
-    // We update the master links array to ensure the changes survive filter updates
+    // 3. Force state update with new array reference to break memoization
     setLinks([...newLinks]);
+    setIsReordering(true);
 
-    // 6. DB Persistence
+    // 4. Persistence with feedback
     const { error } = await supabase
       .from("vault_links")
       .update({ position: newPos })
       .eq("id", activeId);
 
+    setIsReordering(false);
+
     if (error) {
-      console.error("[Reorder] Database update failed:", error.message);
-      // Revert if DB fails to keep UI in sync with reality
-      setLinks([...initialLinks]); 
+      console.error("[DnD] Persistence failed:", error.message);
+      setLinks([...initialLinks]); // Revert on failure
     }
   };
 
@@ -498,6 +508,7 @@ export function VaultProvider({
     handleSubmit,
     resetForm,
     handleReorder,
+    isReordering,
   };
 
   return <VaultContext.Provider value={value}>{children}</VaultContext.Provider>;

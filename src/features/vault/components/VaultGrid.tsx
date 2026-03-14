@@ -25,6 +25,7 @@ import { Badge } from "@/shared/components/ui/badge";
 import { useVault } from "../context/VaultContext";
 import { VaultCard } from "./VaultCard";
 import { VaultCardSkeleton } from "./VaultCardSkeleton";
+import { Loader2, Save } from "lucide-react";
 
 interface SortableVaultCardProps {
   link: any;
@@ -92,6 +93,7 @@ export function VaultGrid() {
     activeCategory,
     searchQuery,
     handleReorder,
+    isReordering,
   } = useVault();
 
   const [activeId, setActiveId] = React.useState<string | null>(null);
@@ -148,9 +150,15 @@ export function VaultGrid() {
           <h2 className="text-xl font-(family-name:--font-geist) font-bold text-foreground sm:text-2xl">
             Link Vault
           </h2>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Drag to rearrange. Changes persist automatically.
-          </p>
+          <div className="mt-1 flex items-center gap-2 text-sm text-muted-foreground">
+            <span>Drag to rearrange. Changes persist automatically.</span>
+            {isReordering && (
+              <span className="flex items-center gap-1.5 text-primary font-medium animate-pulse">
+                <Loader2 className="size-3 animate-spin" />
+                Saving...
+              </span>
+            )}
+          </div>
         </div>
         <Badge variant="outline">{links.length} links</Badge>
       </div>
