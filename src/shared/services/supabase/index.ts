@@ -12,4 +12,5 @@ export type VaultLink = {
   summary: string | null;
   created_at: string;
   youtube_id?: string | null;
+  position: number; // Added for drag-and-drop sorting
 };

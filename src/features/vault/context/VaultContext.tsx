@@ -60,6 +60,7 @@ interface VaultContextType {
   handleConfirmDelete: () => Promise<void>;
   handleSubmit: (e: React.FormEvent) => Promise<void>;
   resetForm: (categoryHint?: string) => void;
+  handleReorder: (activeId: string, overId: string) => Promise<void>;
 }
 
 const VaultContext = React.createContext<VaultContextType | undefined>(undefined);
@@ -68,11 +69,19 @@ function normalizeCategory(value: string) {
   return value.replace(/\s+/g, " ").trim();
 }
 
-function sortLinksLatest(items: VaultLink[]) {
+function sortLinksByPosition(items: VaultLink[]) {
   return [...items].sort((a, b) => {
-    const aTime = a.created_at ? new Date(a.created_at).getTime() : 0;
-    const bTime = b.created_at ? new Date(b.created_at).getTime() : 0;
-    return bTime - aTime;
+    const posA = a.position ?? 0;
+    const posB = b.position ?? 0;
+    
+    if (posA !== posB) {
+      return posA - posB;
+    }
+    
+    // Secondary sort: newest first if positions are identical
+    const timeA = a.created_at ? new Date(a.created_at).getTime() : 0;
+    const timeB = b.created_at ? new Date(b.created_at).getTime() : 0;
+    return timeB - timeA;
   });
 }
 
@@ -112,7 +121,7 @@ export function VaultProvider({
   const [mobileCategoriesOpen, setMobileCategoriesOpen] = React.useState(false);
   const [activeCategory, setActiveCategory] = React.useState("All");
   const [searchQuery, setSearchQuery] = React.useState("");
-  const [links, setLinks] = React.useState<VaultLink[]>(() => sortLinksLatest(initialLinks));
+  const [links, setLinks] = React.useState<VaultLink[]>(() => sortLinksByPosition(initialLinks));
   const [selectedLink, setSelectedLink] = React.useState<VaultLink | null>(null);
   const [menuOpenId, setMenuOpenId] = React.useState<string | null>(null);
   const [formOpen, setFormOpen] = React.useState(false);
@@ -131,7 +140,7 @@ export function VaultProvider({
   const supabase = React.useMemo(() => createSupabaseBrowserClient(), []);
   const router = useRouter();
 
-  React.useEffect(() => setLinks(sortLinksLatest(initialLinks)), [initialLinks]);
+  React.useEffect(() => setLinks(sortLinksByPosition(initialLinks)), [initialLinks]);
 
   React.useEffect(() => {
     const timer = window.setTimeout(() => setIsInitialLoading(false), 420);
@@ -184,7 +193,7 @@ export function VaultProvider({
         (link.source_url && link.source_url !== link.url ? link.source_url.toLowerCase().includes(term) : false)
       );
     });
-    return sortLinksLatest(filtered);
+    return sortLinksByPosition(filtered);
   }, [activeCategory, links, searchQuery]);
 
   const resetForm = (categoryHint?: string) => {
@@ -329,18 +338,22 @@ export function VaultProvider({
 
     setIsSubmitting(true);
     if (formMode === "create") {
+      // Find max position to put new link at the end
+      const maxPos = links.reduce((max, l) => Math.max(max, l.position ?? 0), 0);
+      
       const { data, error } = await supabase
         .from("vault_links")
         .insert({
           title: formState.title.trim(),
           url: formState.url.trim(),
-          source_url: formState.sourceUrl.trim() || formState.url.trim(), // Fallback to main URL to bypass check constraint
+          source_url: formState.sourceUrl.trim() || formState.url.trim(),
           category,
           status: "Backlog",
           summary: formState.summary.trim() || null,
           youtube_id: formState.youtubeId || null,
+          position: maxPos + 1024, // High number for end of list
         })
-        .select("id, title, url, source_url, category, status, summary, created_at, youtube_id")
+        .select("id, title, url, source_url, category, status, summary, created_at, youtube_id, position")
         .single();
       setIsSubmitting(false);
       if (error) {
@@ -349,7 +362,7 @@ export function VaultProvider({
         }
         return setFormError(error.message);
       }
-      setLinks((prev) => sortLinksLatest([data as VaultLink, ...prev]));
+      setLinks((prev) => sortLinksByPosition([(data as VaultLink), ...prev]));
       setFormOpen(false);
       resetForm(category);
       return;
@@ -364,13 +377,13 @@ export function VaultProvider({
       .update({
         title: formState.title.trim(),
         url: formState.url.trim(),
-        source_url: formState.sourceUrl.trim() || formState.url.trim(), // Fallback to main URL to bypass check constraint
+        source_url: formState.sourceUrl.trim() || formState.url.trim(),
         category,
         summary: formState.summary.trim() || null,
         youtube_id: formState.youtubeId || null,
       })
       .eq("id", editingId)
-      .select("id, title, url, source_url, category, status, summary, created_at, youtube_id")
+      .select("id, title, url, source_url, category, status, summary, created_at, youtube_id, position")
       .single();
     setIsSubmitting(false);
     if (error) {
@@ -380,12 +393,61 @@ export function VaultProvider({
       return setFormError(error.message);
     }
     setLinks((prev) =>
-      sortLinksLatest(prev.map((item) => (item.id === editingId ? (data as VaultLink) : item))),
+      sortLinksByPosition(prev.map((item) => (item.id === editingId ? (data as VaultLink) : item))),
     );
     if (selectedLink?.id === editingId) setSelectedLink(data as VaultLink);
     setFormOpen(false);
     setMenuOpenId(null);
     resetForm(category);
+  };
+
+  const handleReorder = async (activeId: string, overId: string) => {
+    // 1. Identify indices in the MASTER links array, not just the filtered view
+    const oldIndex = links.findIndex((l) => l.id === activeId);
+    const newIndex = links.findIndex((l) => l.id === overId);
+    
+    if (oldIndex === -1 || newIndex === -1 || oldIndex === newIndex) {
+      console.log(`[Reorder] Invalid move indices: ${oldIndex} -> ${newIndex}`);
+      return;
+    }
+
+    // 2. Perform the movement using array-move logic
+    const newLinks = [...links];
+    const [movedItem] = newLinks.splice(oldIndex, 1);
+    newLinks.splice(newIndex, 0, movedItem);
+
+    // 3. Calculate new fractional position
+    let newPos: number;
+    if (newIndex === 0) {
+      newPos = (newLinks[1]?.position ?? 0) - 10000;
+    } else if (newIndex === newLinks.length - 1) {
+      newPos = (newLinks[newIndex - 1]?.position ?? 0) + 10000;
+    } else {
+      const prevPos = newLinks[newIndex - 1].position ?? 0;
+      const nextPos = newLinks[newIndex + 1].position ?? 0;
+      newPos = (prevPos + nextPos) / 2;
+    }
+
+    console.log(`[Reorder] Persisting item ${activeId} to new position ${newPos}`);
+
+    // 4. Update the actual item reference
+    movedItem.position = newPos;
+
+    // 5. CRITICAL: Update the state with a new array reference AND force a refresh
+    // We update the master links array to ensure the changes survive filter updates
+    setLinks([...newLinks]);
+
+    // 6. DB Persistence
+    const { error } = await supabase
+      .from("vault_links")
+      .update({ position: newPos })
+      .eq("id", activeId);
+
+    if (error) {
+      console.error("[Reorder] Database update failed:", error.message);
+      // Revert if DB fails to keep UI in sync with reality
+      setLinks([...initialLinks]); 
+    }
   };
 
   const handleLogout = async () => {
@@ -435,6 +497,7 @@ export function VaultProvider({
     handleConfirmDelete,
     handleSubmit,
     resetForm,
+    handleReorder,
   };
 
   return <VaultContext.Provider value={value}>{children}</VaultContext.Provider>;

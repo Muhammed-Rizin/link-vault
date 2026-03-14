@@ -18,7 +18,8 @@ export default async function Home() {
 
   const { data, error } = await supabase
     .from("vault_links")
-    .select("id, title, url, source_url, category, status, summary, created_at, youtube_id")
+    .select("id, title, url, source_url, category, status, summary, created_at, youtube_id, position")
+    .order("position", { ascending: true })
     .order("created_at", { ascending: false });
 
   if (error) {
@@ -35,6 +36,7 @@ export default async function Home() {
     summary: row.summary,
     created_at: row.created_at,
     youtube_id: row.youtube_id,
+    position: row.position ?? 0,
   }));
 
   return (
