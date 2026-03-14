@@ -25,6 +25,7 @@ export async function POST(request: Request) {
         summary: null,
         image: null,
         category: null,
+        suggestedCategories: [],
       } satisfies EnrichResponse,
       { status: 200 },
     );

@@ -7,6 +7,7 @@ import { usePathname } from "next/navigation";
 import { Button } from "@/shared/components/ui/button";
 import { cn } from "@/shared/utils/utils";
 import { useVault } from "@/features/vault/context/VaultContext";
+import { sortCategories } from "@/features/vault/services/category.service";
 
 interface SidebarProps {
   userEmail: string;
@@ -42,6 +43,10 @@ export function Sidebar({ userEmail, userAvatarUrl }: SidebarProps) {
       return acc;
     }, {});
   }, [categories, links]);
+
+  const sortedCategories = React.useMemo(() => {
+    return sortCategories(categories);
+  }, [categories]);
 
   return (
     <aside
@@ -90,7 +95,7 @@ export function Sidebar({ userEmail, userAvatarUrl }: SidebarProps) {
               Categories
             </p>
           )}
-          {categories.map((category) => {
+          {sortedCategories.map((category) => {
             const active = !isProfile && category === activeCategory;
             return (
               <button

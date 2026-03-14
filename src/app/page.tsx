@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation"
 
-import { VaultDashboardPage as VaultDashboard } from "@/features/vault/pages/VaultDashboardPage";
+import { VaultDashboardPage } from "@/features/vault/pages/VaultDashboardPage";
 import { type VaultLink } from "@/shared/services/supabase";
 import { createClient as createSupabaseServerClient } from "@/shared/services/supabase/server";
 
@@ -18,7 +18,7 @@ export default async function Home() {
 
   const { data, error } = await supabase
     .from("vault_links")
-    .select("id, title, url, source_url, category, status, summary, created_at")
+    .select("id, title, url, source_url, category, status, summary, created_at, youtube_id")
     .order("created_at", { ascending: false });
 
   if (error) {
@@ -31,13 +31,14 @@ export default async function Home() {
     url: row.url,
     source_url: row.source_url,
     category: row.category,
-    status: validStatuses.has(row.status) ? row.status : "Backlog",
+    status: (validStatuses.has(row.status) ? row.status : "Backlog") as any,
     summary: row.summary,
     created_at: row.created_at,
+    youtube_id: row.youtube_id,
   }));
 
   return (
-    <VaultDashboard
+    <VaultDashboardPage
       initialLinks={safeLinks}
       userEmail={user.email ?? "researcher@link-vault.dev"}
       userAvatarUrl={typeof user.user_metadata?.avatar_url === "string" ? user.user_metadata.avatar_url : null}

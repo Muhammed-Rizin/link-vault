@@ -6,6 +6,7 @@ import { Badge } from "@/shared/components/ui/badge";
 import { useVault } from "../context/VaultContext";
 import { VaultCard } from "./VaultCard";
 import { VaultCardSkeleton } from "./VaultCardSkeleton";
+import { sortCategories } from "@/features/vault/services/category.service";
 
 const listVariants: Variants = {
   hidden: {},
@@ -28,7 +29,34 @@ export function VaultGrid() {
     setMenuOpenId,
     activeCategory,
     searchQuery,
+    setSearchQuery,
   } = useVault();
+
+  // Sort by CATEGORY_LEVELS, then newest first
+  const sortedLinks = React.useMemo(() => {
+    return [...links].sort((a, b) => {
+      // Primary sort: Category Hierarchy
+      const order = sortCategories([a.category, b.category]);
+      if (a.category !== b.category) {
+        return order[0] === a.category ? -1 : 1;
+      }
+      
+      // Secondary sort: Newest first
+      return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+    });
+  }, [links]);
+
+  React.useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === "k") {
+        e.preventDefault();
+        const searchInput = document.querySelector('input[type="search"]') as HTMLInputElement;
+        if (searchInput) searchInput.focus();
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, []);
 
   return (
     <main className="flex-1 overflow-y-auto px-4 py-5 md:px-6">
@@ -58,7 +86,7 @@ export function VaultGrid() {
           animate="show"
           className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3"
         >
-          {links.map((link) => (
+          {sortedLinks.map((link) => (
             <motion.article key={link.id} variants={itemVariants}>
               <VaultCard
                 link={link}

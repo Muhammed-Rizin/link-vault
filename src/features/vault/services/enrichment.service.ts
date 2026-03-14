@@ -4,6 +4,8 @@ export type EnrichResponse = {
   summary: string | null;
   image: string | null;
   category: string | null;
+  suggestedCategories?: string[]; // Optional after removal
+  youtubeId?: string | null;
 };
 
 function extractPlainText(html: string): string {
@@ -43,12 +45,14 @@ ${text}
                 text: `Analyze the provided webpage data. Extract or generate:
 1. A clean, accurate Title (Heading).
 2. A short, engaging Summary (1-2 sentences).
-3. A single Suggested Category (e.g., "AI Tools", "Design", "DevTools", "News", "Resource", etc.).
+3. A ranked list of Suggested Categories (e.g., "AI Tools", "Design", "DevTools", "News", "Resource", etc.).
 
-${existingCategories?.length ? `The available categories are: ${existingCategories.join(", ")}. If the content fits well into one of these, use it exactly as written. Otherwise, suggest a NEW professional category name.` : `Suggest a short, professional category name.`}
+${existingCategories?.length ? `The available categories are: ${existingCategories.join(", ")}. 
 
-Return ONLY a valid JSON object strictly matching this format: {"title": "The Title", "summary": "The summary here.", "category": "Category Name"}
-IMPORTANT: Never return null or empty strings for any field. If unsure about the category, use a general term like "Software" or "Web".
+CRITICAL INSTRUCTION: You MUST prioritize the available categories. Suggest multiple if relevant. ONLY suggest a NEW category name if there is a 0% match with the existing list. Accuracy and consolidation are the highest priority.` : `Suggest short, professional category names.`}
+
+Return ONLY a valid JSON object strictly matching this format: {"title": "The Title", "summary": "The summary here.", "suggestedCategories": ["Category 1", "Category 2"]}
+IMPORTANT: Never return null or empty strings for any field. If unsure about categories, use "Software" or "Web".
 
 Data to analyze:
 ${contextText}`,
@@ -64,7 +68,14 @@ ${contextText}`,
     const resultText = data.candidates?.[0]?.content?.parts?.[0]?.text;
     if (resultText) {
       const jsonMatch = resultText.match(/\{[\s\S]*\}/);
-      if (jsonMatch) return JSON.parse(jsonMatch[0]);
+      if (jsonMatch) {
+        const parsed = JSON.parse(jsonMatch[0]);
+        return {
+          title: parsed.title,
+          summary: parsed.summary,
+          category: parsed.suggestedCategories?.[0] || "AI Coding",
+        };
+      }
     }
   } catch (e) {
     console.error("AI Enrichment Error:", e);
@@ -129,6 +140,12 @@ async function fetchWithTimeout(url: string, options: RequestInit = {}, timeoutM
   }
 }
 
+function extractYouTubeId(url: string): string | null {
+  const regex = /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/i;
+  const match = url.match(regex);
+  return match ? match[1] : null;
+}
+
 export async function enrichUrl(
   rawUrl: string,
   existingCategories?: string[],
@@ -140,6 +157,7 @@ export async function enrichUrl(
 
   // Handle YouTube
   if (parsedUrl.hostname.includes("youtube.com") || parsedUrl.hostname.includes("youtu.be")) {
+    const youtubeId = extractYouTubeId(rawUrl);
     try {
       const oembedUrl = `https://www.youtube.com/oembed?url=${encodeURIComponent(rawUrl)}&format=json`;
       const oembedResponse = await fetchWithTimeout(oembedUrl);
@@ -151,10 +169,24 @@ export async function enrichUrl(
           summary: data.title || null,
           image: data.thumbnail_url || null,
           category: "Video",
+          suggestedCategories: ["Video"],
+          youtubeId,
         };
       }
     } catch {
       // Fallback to standard fetch if oembed fails
+    }
+    // Final fallback for YouTube if oembed fails but we have the ID
+    if (youtubeId) {
+      return {
+        title: "YouTube Video",
+        description: "View this video on YouTube",
+        summary: "YouTube Video",
+        image: `https://img.youtube.com/vi/${youtubeId}/maxresdefault.jpg`,
+        category: "Video",
+        suggestedCategories: ["Video"],
+        youtubeId,
+      };
     }
   }
 
@@ -171,6 +203,7 @@ export async function enrichUrl(
           summary: data.author_name ? `Post by ${data.author_name}` : "X Post",
           image: null,
           category: "Social",
+          suggestedCategories: ["Social"],
         };
       }
     } catch {
@@ -191,6 +224,7 @@ export async function enrichUrl(
           summary: data.title || null,
           image: data.thumbnail_url || null,
           category: "Video",
+          suggestedCategories: ["Video"],
         };
       }
     } catch {
@@ -218,6 +252,7 @@ export async function enrichUrl(
             summary: data.description || "Social Media Link",
             image: data.image?.url || null,
             category: "Social",
+            suggestedCategories: ["Social"],
           };
         }
       }
@@ -241,6 +276,7 @@ export async function enrichUrl(
           summary: `Instagram profile for @${paths[0]}`,
           image: null,
           category: "Social",
+          suggestedCategories: ["Social"],
         };
       } else if (isPost && paths[1]) {
         return {
@@ -249,6 +285,7 @@ export async function enrichUrl(
           summary: `Instagram post ID: ${paths[1]}`,
           image: null,
           category: "Social",
+          suggestedCategories: ["Social"],
         };
       } else {
         return {
@@ -257,6 +294,7 @@ export async function enrichUrl(
           summary: "Instagram Link",
           image: null,
           category: "Social",
+          suggestedCategories: ["Social"],
         };
       }
     }
@@ -283,6 +321,7 @@ export async function enrichUrl(
               : `Reddit post in r/${post.subreddit}`,
             image: post.thumbnail && post.thumbnail.startsWith("http") ? post.thumbnail : null,
             category: "Community",
+            suggestedCategories: ["Community"],
           };
         }
       }
@@ -304,6 +343,7 @@ export async function enrichUrl(
         summary: `LinkedIn Profile`,
         image: null,
         category: "Professional",
+        suggestedCategories: ["Professional"],
       };
     } else if (paths[0] === "company" && paths[1]) {
       return {
@@ -315,6 +355,7 @@ export async function enrichUrl(
         summary: `LinkedIn Company Page`,
         image: null,
         category: "Professional",
+        suggestedCategories: ["Professional"],
       };
     }
     // For posts and jobs, let it fall back or we can provide a default so it doesn't fail entirely
@@ -361,14 +402,15 @@ export async function enrichUrl(
       description: `Link to ${parsedUrl.hostname}`,
       summary: `Link to ${parsedUrl.hostname}`,
       image: null,
-      category: null,
+      category: "Web",
+      suggestedCategories: ["Web"],
     };
   }
 
   let finalTitle = title;
   let finalDescription = description;
   let finalSummary = description;
-  let finalCategory = null;
+  let finalCategory = "";
 
   const apiKey = process.env.NEXT_PUBLIC_GEMINI_API_KEY || process.env.GEMINI_API_KEY;
 
@@ -382,7 +424,7 @@ export async function enrichUrl(
     if (aiResult) {
       finalTitle = aiResult.title || finalTitle;
       finalSummary = aiResult.summary || finalSummary;
-      finalCategory = aiResult.category || null;
+      finalCategory = aiResult.category || finalCategory;
       // Also update description if summary is better
       if (aiResult.summary) finalDescription = aiResult.summary;
     }

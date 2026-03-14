@@ -3,6 +3,7 @@
 import * as React from "react";
 import { useRouter } from "next/navigation";
 import { createSupabaseBrowserClient, type VaultLink } from "@/shared/services/supabase";
+import { sortCategories } from "../services/category.service";
 
 type FormMode = "create" | "edit";
 
@@ -12,6 +13,7 @@ type LinkFormState = {
   sourceUrl: string;
   category: string;
   summary: string;
+  youtubeId?: string | null;
 };
 
 interface VaultContextType {
@@ -74,7 +76,11 @@ function sortLinksLatest(items: VaultLink[]) {
   });
 }
 
-function toFormState(link?: VaultLink, fallbackCategory = "AI Coding"): LinkFormState {
+function getDefaultCategory() {
+  return "AI Coding";
+}
+
+function toFormState(link?: VaultLink, fallbackCategory = ""): LinkFormState {
   if (!link) {
     return {
       title: "",
@@ -82,14 +88,16 @@ function toFormState(link?: VaultLink, fallbackCategory = "AI Coding"): LinkForm
       sourceUrl: "",
       category: fallbackCategory,
       summary: "",
+      youtubeId: null,
     };
   }
   return {
     title: link.title,
     url: link.url,
-    sourceUrl: link.source_url,
+    sourceUrl: link.source_url === link.url ? "" : (link.source_url || ""),
     category: link.category,
     summary: link.summary ?? "",
+    youtubeId: link.youtube_id,
   };
 }
 
@@ -133,14 +141,16 @@ export function VaultProvider({
   const categories = React.useMemo(() => {
     const unique = [
       ...new Set(links.map((link) => normalizeCategory(link.category)).filter(Boolean)),
-    ].sort((a, b) => a.localeCompare(b));
-    return ["All", ...unique];
+    ];
+    // Sort uniquely but keep All at top
+    return sortCategories(["All", ...unique]);
   }, [links]);
 
-  const existingCategories = React.useMemo(
-    () => categories.filter((category) => category !== "All"),
-    [categories],
-  );
+  const existingCategories = React.useMemo(() => {
+    const raw = links.map((link) => normalizeCategory(link.category)).filter(Boolean);
+    const unique = [...new Set(raw)];
+    return sortCategories(unique);
+  }, [links]);
 
   React.useEffect(() => {
     if (!categories.includes(activeCategory)) setActiveCategory("All");
@@ -171,16 +181,16 @@ export function VaultProvider({
         link.title.toLowerCase().includes(term) ||
         (link.summary ?? "").toLowerCase().includes(term) ||
         link.url.toLowerCase().includes(term) ||
-        link.source_url.toLowerCase().includes(term)
+        (link.source_url && link.source_url !== link.url ? link.source_url.toLowerCase().includes(term) : false)
       );
     });
     return sortLinksLatest(filtered);
   }, [activeCategory, links, searchQuery]);
 
   const resetForm = (categoryHint?: string) => {
-    const fallback = categoryHint ?? categories[1] ?? "AI Coding";
+    const fallback = categoryHint ?? "";
     setFormState(toFormState(undefined, fallback));
-    if (existingCategories.length === 0) {
+    if (existingCategories.length === 0 || !fallback) {
       setCategoryMode("new");
       setNewCategoryName(fallback);
     } else {
@@ -239,11 +249,14 @@ export function VaultProvider({
         summary?: string | null;
         description?: string | null;
         category?: string | null;
+        suggestedCategories?: string[];
+        youtubeId?: string | null;
       };
       if (!response.ok) throw new Error("enrich_failed");
       const title = payload.title?.trim() || null;
       const summary = payload.summary?.trim() || payload.description?.trim() || null;
-      const suggestedCategory = normalizeCategory(payload.category || "");
+      const primaryCategory = normalizeCategory(payload.suggestedCategories?.[0] || payload.category || getDefaultCategory());
+      const youtubeId = payload.youtubeId || null;
 
       if (!title && !summary) {
         setFormError("No metadata was found for this URL.");
@@ -254,17 +267,18 @@ export function VaultProvider({
         ...prev,
         title: title ?? prev.title,
         summary: summary ?? prev.summary,
-        category: suggestedCategory || prev.category,
+        category: primaryCategory,
+        youtubeId: youtubeId ?? prev.youtubeId,
       }));
 
-      // Map suggested category to mode
-      if (suggestedCategory) {
-        if (existingCategories.includes(suggestedCategory)) {
+      // Restore category mode mapping based on AI suggestion
+      if (primaryCategory) {
+        if (existingCategories.includes(primaryCategory)) {
           setCategoryMode("existing");
           setNewCategoryName("");
         } else {
           setCategoryMode("new");
-          setNewCategoryName(suggestedCategory);
+          setNewCategoryName(primaryCategory);
         }
       }
     } catch {
@@ -298,15 +312,16 @@ export function VaultProvider({
     if (
       !formState.title.trim() ||
       !formState.url.trim() ||
-      !formState.sourceUrl.trim() ||
       !category
     ) {
-      setFormError("Title, URL, Source URL, and Category are required.");
+      setFormError("Title, URL, and Category are required.");
       return;
     }
     try {
       new URL(formState.url);
-      new URL(formState.sourceUrl);
+      if (formState.sourceUrl.trim()) {
+        new URL(formState.sourceUrl);
+      }
     } catch {
       setFormError("URL and Source URL must be valid links.");
       return;
@@ -319,12 +334,13 @@ export function VaultProvider({
         .insert({
           title: formState.title.trim(),
           url: formState.url.trim(),
-          source_url: formState.sourceUrl.trim(),
+          source_url: formState.sourceUrl.trim() || formState.url.trim(), // Fallback to main URL to bypass check constraint
           category,
           status: "Backlog",
           summary: formState.summary.trim() || null,
+          youtube_id: formState.youtubeId || null,
         })
-        .select("id, title, url, source_url, category, status, summary, created_at")
+        .select("id, title, url, source_url, category, status, summary, created_at, youtube_id")
         .single();
       setIsSubmitting(false);
       if (error) {
@@ -348,12 +364,13 @@ export function VaultProvider({
       .update({
         title: formState.title.trim(),
         url: formState.url.trim(),
-        source_url: formState.sourceUrl.trim(),
+        source_url: formState.sourceUrl.trim() || formState.url.trim(), // Fallback to main URL to bypass check constraint
         category,
         summary: formState.summary.trim() || null,
+        youtube_id: formState.youtubeId || null,
       })
       .eq("id", editingId)
-      .select("id, title, url, source_url, category, status, summary, created_at")
+      .select("id, title, url, source_url, category, status, summary, created_at, youtube_id")
       .single();
     setIsSubmitting(false);
     if (error) {

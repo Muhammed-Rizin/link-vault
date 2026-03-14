@@ -6,9 +6,10 @@ export type VaultLink = {
   id: string;
   title: string;
   url: string;
-  source_url: string;
+  source_url: string | null;
   category: string;
   status: VaultStatus;
   summary: string | null;
   created_at: string;
+  youtube_id?: string | null;
 };

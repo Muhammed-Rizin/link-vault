@@ -128,19 +128,20 @@ export function VaultDetailsModal({ link, onClose }: LinkDetailsModalProps) {
 
   React.useEffect(() => {
     if (!link) return
-    const urls = [...new Set([link.url, link.source_url])]
+    const urls = [link.url, link.source_url].filter((u): u is string => Boolean(u))
+    const uniqueUrls = [...new Set(urls)]
     let isCancelled = false
 
     setLoadingByUrl((prev) => {
       const next = { ...prev }
-      urls.forEach((url) => {
+      uniqueUrls.forEach((url) => {
         next[url] = true
       })
       return next
     })
 
     void Promise.all(
-      urls.map(async (url) => {
+      uniqueUrls.map(async (url) => {
         try {
           const response = await fetch("/api/enrich", {
             method: "POST",
@@ -243,8 +244,8 @@ export function VaultDetailsModal({ link, onClose }: LinkDetailsModalProps) {
                 ) : (
                   <>
                     <div className="flex flex-wrap items-center gap-2">
-                      <Badge variant="outline">{link.category}</Badge>
-                      <div className="inline-flex items-center gap-1 text-xs text-muted-foreground">
+                      <Badge variant="outline" className="font-bold">{link.category}</Badge>
+                      <div className="ml-auto inline-flex items-center gap-1 text-xs text-muted-foreground">
                         <CalendarDays className="size-3.5" />
                         {formatDateTime(link.created_at)}
                       </div>
@@ -254,6 +255,19 @@ export function VaultDetailsModal({ link, onClose }: LinkDetailsModalProps) {
                       {link.summary || "No summary available yet."}
                     </p>
 
+                    {link.youtube_id && (
+                      <div className="relative aspect-video w-full overflow-hidden rounded-xl border border-border/80 bg-muted/30 shadow-sm">
+                        <iframe
+                          src={`https://www.youtube.com/embed/${link.youtube_id}`}
+                          title="YouTube video player"
+                          frameBorder="0"
+                          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                          allowFullScreen
+                          className="absolute inset-0 h-full w-full"
+                        />
+                      </div>
+                    )}
+
                     <div className="space-y-3">
                       <EmbedPreviewCard
                         label="URL"
@@ -261,12 +275,14 @@ export function VaultDetailsModal({ link, onClose }: LinkDetailsModalProps) {
                         preview={previewByUrl[link.url] ?? null}
                         isLoading={Boolean(loadingByUrl[link.url])}
                       />
-                      <EmbedPreviewCard
-                        label="Source"
-                        url={link.source_url}
-                        preview={previewByUrl[link.source_url] ?? null}
-                        isLoading={Boolean(loadingByUrl[link.source_url])}
-                      />
+                      {link.source_url && link.source_url !== link.url && (
+                        <EmbedPreviewCard
+                          label="Source"
+                          url={link.source_url}
+                          preview={previewByUrl[link.source_url] ?? null}
+                          isLoading={Boolean(loadingByUrl[link.source_url])}
+                        />
+                      )}
                     </div>
                   </>
                 )}

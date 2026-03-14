@@ -3,8 +3,9 @@
 
 import * as React from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { ExternalLink, MoreHorizontal, Pencil, Trash2 } from "lucide-react";
+import { ExternalLink, MoreHorizontal, Pencil, Trash2, Youtube } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
+import { Badge } from "@/shared/components/ui/badge";
 import {
   Card,
   CardContent,
@@ -51,8 +52,7 @@ export function VaultCard({
   onEdit,
   onDelete,
 }: VaultCardProps) {
-  const sourceDomain = getDomain(link.source_url);
-  const sourceDisplayUrl = getDisplaySourceUrl(link.source_url);
+  const isSourceValid = link.source_url && link.source_url !== link.url;
 
   return (
     <Card
@@ -71,20 +71,27 @@ export function VaultCard({
         <div className="flex items-start justify-between gap-3">
           <div className="flex min-w-0 items-center gap-3">
             <div className="relative shrink-0">
-              <img
-                src={`https://www.google.com/s2/favicons?domain=${getDomain(link.url)}&sz=64`}
-                alt=""
-                className="size-8 rounded-lg border border-border/80 bg-background p-1.5 shadow-sm"
-              />
+              {link.youtube_id ? (
+                <div className="flex size-8 items-center justify-center rounded-lg border border-red-500/30 bg-red-500/10 shadow-sm transition-colors group-hover:bg-red-500/20">
+                  <Youtube className="size-4 text-red-500" />
+                </div>
+              ) : (
+                <img
+                  src={`https://www.google.com/s2/favicons?domain=${getDomain(link.url)}&sz=64`}
+                  alt=""
+                  className="size-8 rounded-lg border border-border/80 bg-background p-1.5 shadow-sm"
+                />
+              )}
             </div>
             <div className="min-w-0">
               <CardTitle className="truncate text-[15px] leading-tight font-bold tracking-tight group-hover:text-primary transition-colors">
                 {link.title}
               </CardTitle>
-              <CardDescription className="mt-1 flex items-center gap-1 text-[12px]">
-                <span className="size-1 rounded-full bg-primary/40" />
-                {getDomain(link.url)}
-              </CardDescription>
+              <div className="mt-1 flex flex-wrap items-center gap-1.5">
+                <Badge variant="outline" className="h-4 px-1.5 text-[9px] font-bold uppercase tracking-wider bg-background/50">
+                  {link.category}
+                </Badge>
+              </div>
             </div>
           </div>
 
@@ -147,20 +154,26 @@ export function VaultCard({
         </p>
 
         <div className="mt-auto flex items-center justify-between gap-3">
-          <a
-            href={link.source_url}
-            target="_blank"
-            rel="noopener noreferrer"
-            onClick={(event) => event.stopPropagation()}
-            className="group/source flex min-w-0 items-center gap-2 rounded-full border border-border/40 bg-muted/20 px-2.5 py-1.5 text-[10px] font-semibold text-muted-foreground transition-all hover:border-border/80 hover:bg-muted/40 hover:text-foreground"
-          >
-            <img
-              src={`https://www.google.com/s2/favicons?domain=${sourceDomain}&sz=32`}
-              alt=""
-              className="size-3.5 shrink-0 rounded-sm opacity-70 transition-opacity group-hover/source:opacity-100"
-            />
-            <span className="truncate">{sourceDisplayUrl}</span>
-          </a>
+          {isSourceValid ? (
+            <a
+              href={link.source_url!}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={(event) => event.stopPropagation()}
+              className="group/source flex min-w-0 items-center gap-2 rounded-full border border-border/40 bg-muted/20 px-2.5 py-1.5 text-[10px] font-semibold text-muted-foreground transition-all hover:border-border/80 hover:bg-muted/40 hover:text-foreground"
+            >
+              <img
+                src={`https://www.google.com/s2/favicons?domain=${getDomain(link.source_url!)}&sz=32`}
+                alt=""
+                className="size-3.5 shrink-0 rounded-sm opacity-70 transition-opacity group-hover/source:opacity-100"
+              />
+              <span className="truncate">{getDisplaySourceUrl(link.source_url!)}</span>
+            </a>
+          ) : (
+            <div className="flex min-w-0 items-center gap-2 rounded-full border border-border/40 bg-muted/10 px-2.5 py-1.5 text-[10px] font-semibold text-muted-foreground/50">
+              <span className="truncate italic">No source specified</span>
+            </div>
+          )}
 
           <Button
             asChild
