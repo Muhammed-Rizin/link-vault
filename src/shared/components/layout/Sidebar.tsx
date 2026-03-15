@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { ChevronLeft, ChevronRight, Folders, LogOut, UserCircle } from "lucide-react";
+import { ChevronLeft, ChevronRight, Folders, LogOut } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Button } from "@/shared/components/ui/button";
@@ -75,7 +75,7 @@ export function Sidebar({ userEmail, userAvatarUrl }: SidebarProps) {
       <div className="flex flex-1 flex-col overflow-hidden">
         <div className="px-2 py-3 border-b border-sidebar-border/50">
           <Link
-            href="/"
+            href="/links"
             className={cn(
               "flex h-9 items-center gap-2 rounded-lg border border-transparent px-2 text-sm transition-colors",
               !isProfile
@@ -103,7 +103,7 @@ export function Sidebar({ userEmail, userAvatarUrl }: SidebarProps) {
                 type="button"
                 onClick={() => {
                   if (isProfile) {
-                    window.location.href = "/";
+                    window.location.href = "/links";
                     setTimeout(() => setActiveCategory(category), 100);
                   } else {
                     setActiveCategory(category);
