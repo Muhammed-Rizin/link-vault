@@ -8,7 +8,7 @@ import { VaultGrid } from "@/features/vault/components/VaultGrid";
 import { VaultLinkForm } from "@/features/vault/components/VaultLinkForm";
 import { VaultDeleteDialog } from "@/features/vault/components/VaultDeleteDialog";
 import { VaultDetailsModal } from "@/features/vault/components/VaultDetailsModal";
-import { PullToRefresh } from "@/shared/components/ui/PullToRefresh";
+import { PullToRefresh } from "@/shared/components/ui/pull-to-refresh";
 import type { VaultLink } from "@/shared/services/supabase";
 
 interface VaultDashboardPageProps {

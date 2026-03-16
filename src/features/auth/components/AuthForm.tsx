@@ -2,18 +2,21 @@
 
 import * as React from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { ArrowRight, Github, Lock, Mail, User } from "lucide-react";
+import { ArrowRight, Github, Mail, User, X, ShieldCheck, Lock } from "lucide-react";
 import { useRouter } from "next/navigation";
 
 import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
 import { createClient as createSupabaseClient } from "@/shared/services/supabase/client";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/components/ui/card";
+import { Logo } from "@/shared/components/ui/logo";
 
 type AuthMode = "login" | "signup";
 type OAuthProvider = "google" | "github";
 
 type AuthFormProps = {
   mode: AuthMode;
+  onCancel?: () => void;
 };
 
 const formVariants = {
@@ -42,7 +45,7 @@ function GoogleIcon({ className }: { className?: string }) {
   );
 }
 
-export function AuthForm({ mode }: AuthFormProps) {
+export function AuthForm({ mode, onCancel }: AuthFormProps) {
   const [currentMode, setCurrentMode] = React.useState<AuthMode>(mode);
   const [email, setEmail] = React.useState("");
   const [password, setPassword] = React.useState("");
@@ -76,7 +79,6 @@ export function AuthForm({ mode }: AuthFormProps) {
     const nextMode: AuthMode = currentMode === "login" ? "signup" : "login";
     setCurrentMode(nextMode);
     setError(null);
-    router.push(nextMode === "login" ? "/login" : "/signup");
   };
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
@@ -95,7 +97,7 @@ export function AuthForm({ mode }: AuthFormProps) {
         setIsSubmitting(false);
         return;
       }
-      router.push("/");
+      router.push("/links");
       router.refresh();
     } else {
       const { error: signUpError } = await supabase.auth.signUp({
@@ -119,28 +121,39 @@ export function AuthForm({ mode }: AuthFormProps) {
   const isSignup = currentMode === "signup";
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 12 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.35, ease: "easeOut" }}
-      className="relative w-full max-w-md overflow-hidden rounded-2xl border border-border/80 bg-card/85 shadow-[0_24px_80px_rgba(0,0,0,0.45)] backdrop-blur-xl"
-    >
-      <div className={`h-1 w-full ${isSignup ? "bg-primary" : "bg-muted-foreground/30"}`} />
-      <div className="space-y-6 p-6 sm:p-8">
-        <div className="space-y-2">
-          <p className="text-[10px] font-bold tracking-[0.2em] text-muted-foreground uppercase">
-            Intelligence Access
-          </p>
-          <h1 className="text-2xl font-bold tracking-tight text-foreground">
-            {isSignup ? "Create Your Vault" : "Welcome Back"}
-          </h1>
-          <p className="text-sm text-muted-foreground">
-            {isSignup
-              ? "Start managing high-signal links with enterprise workflows."
-              : "Sign in to continue your research."}
-          </p>
+    <Card className="border-border/80 bg-card w-full max-w-md shadow-2xl">
+      <CardHeader className="pb-3 px-8 pt-8">
+        <div className="flex items-start justify-between gap-3">
+          <div className="flex min-w-0 items-start gap-4">
+            <div className="mt-1 p-2 rounded-lg border border-border/80 bg-background/40">
+              <Logo iconClassName="size-7" showText={false} />
+            </div>
+            <div className="min-w-0">
+              <CardTitle className="text-balance text-xl font-bold tracking-tight">
+                {isSignup ? "Create Vault" : "Welcome Back"}
+              </CardTitle>
+              <CardDescription className="mt-1 text-sm font-medium">
+                {isSignup
+                  ? "Join high-signal web research."
+                  : "Access your digital second brain."}
+              </CardDescription>
+            </div>
+          </div>
+          {onCancel && (
+            <Button
+              size="icon-sm"
+              variant="ghost"
+              onClick={onCancel}
+              aria-label="Close"
+              className="rounded-full"
+            >
+              <X className="size-5" />
+            </Button>
+          )}
         </div>
+      </CardHeader>
 
+      <CardContent className="space-y-6 px-8 pb-10 pt-4">
         <AnimatePresence mode="wait">
           <motion.form
             key={currentMode}
@@ -148,57 +161,59 @@ export function AuthForm({ mode }: AuthFormProps) {
             initial="initial"
             animate="animate"
             exit="exit"
-            transition={{ duration: 0.22 }}
+            transition={{ duration: 0.18, ease: "easeOut" }}
             onSubmit={handleSubmit}
             className="space-y-4"
           >
             {isSignup && (
-              <div className="space-y-2">
-                <div className="relative">
-                  <User className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-                  <Input
-                    placeholder="Full Name"
-                    value={fullName}
-                    onChange={(e) => setFullName(e.target.value)}
-                    className="bg-background/50 pl-9"
-                    required
-                  />
-                </div>
+              <div className="relative">
+                <User className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+                <Input
+                  placeholder="Full Name"
+                  value={fullName}
+                  onChange={(e) => setFullName(e.target.value)}
+                  className="bg-background/40 pl-9 border-border/80 h-11"
+                  required
+                />
               </div>
             )}
 
-            <div className="space-y-2">
-              <div className="relative">
-                <Mail className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-                <Input
-                  type="email"
-                  placeholder="name@example.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="bg-background/50 pl-9"
-                  required
-                />
-              </div>
+            <div className="relative">
+              <Mail className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                type="email"
+                placeholder="name@example.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="bg-background/40 pl-9 border-border/80 h-11"
+                required
+              />
             </div>
 
-            <div className="space-y-2">
-              <div className="relative">
-                <Lock className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-                <Input
-                  type="password"
-                  placeholder="Password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="bg-background/50 pl-9"
-                  required
-                />
-              </div>
+            <div className="relative">
+              <Lock className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                type="password"
+                placeholder="••••••••"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="bg-background/40 pl-9 border-border/80 h-11"
+                required
+              />
             </div>
 
-            {error && <p className="text-xs text-destructive font-medium">{error}</p>}
+            {error && (
+              <motion.div 
+                initial={{ opacity: 0, y: 5 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="text-xs text-destructive font-bold bg-destructive/10 p-3 rounded-lg border border-destructive/20 text-center"
+              >
+                {error}
+              </motion.div>
+            )}
 
-            <Button type="submit" disabled={isSubmitting} className="w-full font-bold">
-              {isSubmitting ? "Processing..." : isSignup ? "Create Account" : "Sign In"}
+            <Button type="submit" disabled={isSubmitting} className="w-full h-11 font-bold text-sm bg-primary hover:bg-primary/90 text-black shadow-lg shadow-primary/20 rounded-lg">
+              {isSubmitting ? "Processing..." : isSignup ? "Create My Vault" : "Sign In to Vault"}
               <ArrowRight className="ml-2 size-4" />
             </Button>
           </motion.form>
@@ -206,41 +221,41 @@ export function AuthForm({ mode }: AuthFormProps) {
 
         <div className="relative">
           <div className="absolute inset-0 flex items-center">
-            <span className="w-full border-t border-border/60" />
+            <span className="w-full border-t border-border/80" />
           </div>
           <div className="relative flex justify-center text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
-            <span className="bg-card px-2">Social Auth</span>
+            <span className="bg-card px-3">Instant Access</span>
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-2">
+        <div className="grid grid-cols-2 gap-3">
           <Button
             variant="outline"
             onClick={() => handleOAuth("google")}
             disabled={oauthLoading !== null}
-            className="bg-background/50"
+            className="bg-background/40 border-border/80 h-11 font-bold rounded-lg hover:bg-muted/50"
           >
-            <GoogleIcon className="size-4" />
+            <GoogleIcon className="size-4 mr-2" />
             Google
           </Button>
           <Button
             variant="outline"
             onClick={() => handleOAuth("github")}
             disabled={oauthLoading !== null}
-            className="bg-background/50"
+            className="bg-background/40 border-border/80 h-11 font-bold rounded-lg hover:bg-muted/50"
           >
             <Github className="size-4 mr-2" />
             GitHub
           </Button>
         </div>
 
-        <p className="text-center text-sm text-muted-foreground">
-          {isSignup ? "Already have an account?" : "Need an account?"}{" "}
-          <button onClick={handleToggleMode} className="font-bold text-foreground hover:underline">
+        <p className="text-center text-sm text-muted-foreground font-medium pt-2">
+          {isSignup ? "Already have an account?" : "New to LinkVault?"}{" "}
+          <button onClick={handleToggleMode} className="font-bold text-foreground hover:text-primary transition-colors underline underline-offset-4 decoration-border">
             {isSignup ? "Sign in" : "Create one"}
           </button>
         </p>
-      </div>
-    </motion.div>
+      </CardContent>
+    </Card>
   );
 }

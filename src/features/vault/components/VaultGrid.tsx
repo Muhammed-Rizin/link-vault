@@ -3,10 +3,9 @@
 import * as React from "react";
 import {
   DndContext,
-  closestCenter,
+  closestCorners,
   KeyboardSensor,
-  MouseSensor,
-  TouchSensor,
+  PointerSensor,
   useSensor,
   useSensors,
   DragEndEvent,
@@ -26,11 +25,10 @@ import { Badge } from "@/shared/components/ui/badge";
 import { useVault } from "../context/VaultContext";
 import { VaultCard } from "./VaultCard";
 import { VaultCardSkeleton } from "./VaultCardSkeleton";
-import { Loader2 } from "lucide-react";
-import { type VaultLink } from "@/shared/services/supabase";
+import { Loader2, Save } from "lucide-react";
 
 interface SortableVaultCardProps {
-  link: VaultLink;
+  link: any;
   isMenuOpen: boolean;
   onOpenDetails: () => void;
   onToggleMenu: () => void;
@@ -66,12 +64,7 @@ function SortableVaultCard({ link, ...props }: SortableVaultCardProps) {
       style={style}
       className="h-full outline-none"
     >
-      <div 
-        {...attributes} 
-        {...listeners} 
-        className="h-full"
-        onContextMenu={(e) => e.preventDefault()}
-      >
+      <div {...attributes} {...listeners} className="h-full touch-none">
         <VaultCard link={link} {...props} />
       </div>
     </div>
@@ -97,6 +90,8 @@ export function VaultGrid() {
     setDeletingLink,
     menuOpenId,
     setMenuOpenId,
+    activeCategory,
+    searchQuery,
     handleReorder,
     isReordering,
   } = useVault();
@@ -105,15 +100,9 @@ export function VaultGrid() {
   const activeLink = React.useMemo(() => links.find((l) => l.id === activeId), [links, activeId]);
 
   const sensors = useSensors(
-    useSensor(MouseSensor, {
+    useSensor(PointerSensor, {
       activationConstraint: {
-        distance: 10,
-      },
-    }),
-    useSensor(TouchSensor, {
-      activationConstraint: {
-        delay: 500,
-        tolerance: 8,
+        distance: 12, // Increased for mobile stability
       },
     }),
     useSensor(KeyboardSensor, {
@@ -183,7 +172,7 @@ export function VaultGrid() {
       ) : (
         <DndContext
           sensors={sensors}
-          collisionDetection={closestCenter}
+          collisionDetection={closestCorners}
           onDragStart={handleDragStart}
           onDragEnd={handleDragEnd}
           onDragCancel={handleDragCancel}
@@ -213,7 +202,7 @@ export function VaultGrid() {
 
           <DragOverlay adjustScale dropAnimation={dropAnimation}>
             {activeId && activeLink ? (
-              <div className="h-full w-full rotate-1 scale-105 cursor-grabbing opacity-90 shadow-2xl pointer-events-none">
+              <div className="h-full w-full rotate-1 scale-105 cursor-grabbing opacity-90 shadow-2xl">
                 <VaultCard
                   link={activeLink}
                   isMenuOpen={false}
