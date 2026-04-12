@@ -2,17 +2,13 @@
 
 import * as React from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { ArrowRight, Github, Mail, User, X, ShieldCheck, Lock } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { ArrowRight, Github, Mail, User, X, Lock } from "lucide-react";
 
 import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
-import { createClient as createSupabaseClient } from "@/shared/services/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/components/ui/card";
 import { Logo } from "@/shared/components/ui/logo";
-
-type AuthMode = "login" | "signup";
-type OAuthProvider = "google" | "github";
+import { useAuthForm, AuthMode } from "../hooks/useAuthForm";
 
 type AuthFormProps = {
   mode: AuthMode;
@@ -46,77 +42,21 @@ function GoogleIcon({ className }: { className?: string }) {
 }
 
 export function AuthForm({ mode, onCancel }: AuthFormProps) {
-  const [currentMode, setCurrentMode] = React.useState<AuthMode>(mode);
-  const [email, setEmail] = React.useState("");
-  const [password, setPassword] = React.useState("");
-  const [fullName, setFullName] = React.useState("");
-  const [isSubmitting, setIsSubmitting] = React.useState(false);
-  const [oauthLoading, setOauthLoading] = React.useState<OAuthProvider | null>(null);
-  const [error, setError] = React.useState<string | null>(null);
-  const router = useRouter();
-  const supabase = React.useMemo(() => createSupabaseClient(), []);
-
-  React.useEffect(() => {
-    setCurrentMode(mode);
-  }, [mode]);
-
-  const handleOAuth = async (provider: OAuthProvider) => {
-    setError(null);
-    setOauthLoading(provider);
-
-    const { error: oauthError } = await supabase.auth.signInWithOAuth({
-      provider,
-      options: {
-        redirectTo: `${window.location.origin}/auth/callback`,
-      },
-    });
-
-    setOauthLoading(null);
-    if (oauthError) setError(oauthError.message);
-  };
-
-  const handleToggleMode = () => {
-    const nextMode: AuthMode = currentMode === "login" ? "signup" : "login";
-    setCurrentMode(nextMode);
-    setError(null);
-  };
-
-  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    setError(null);
-    setIsSubmitting(true);
-
-    if (currentMode === "login") {
-      const { error: signInError } = await supabase.auth.signInWithPassword({
-        email: email.trim(),
-        password,
-      });
-
-      if (signInError) {
-        setError(signInError.message);
-        setIsSubmitting(false);
-        return;
-      }
-      router.push("/links");
-      router.refresh();
-    } else {
-      const { error: signUpError } = await supabase.auth.signUp({
-        email: email.trim(),
-        password,
-        options: {
-          data: { full_name: fullName.trim() },
-        },
-      });
-
-      if (signUpError) {
-        setError(signUpError.message);
-        setIsSubmitting(false);
-        return;
-      }
-      alert("Check your email for confirmation!");
-      setIsSubmitting(false);
-    }
-  };
+  const {
+    currentMode,
+    email,
+    setEmail,
+    password,
+    setPassword,
+    fullName,
+    setFullName,
+    isSubmitting,
+    oauthLoading,
+    error,
+    handleOAuth,
+    handleToggleMode,
+    handleSubmit,
+  } = useAuthForm({ initialMode: mode });
 
   const isSignup = currentMode === "signup";
 
