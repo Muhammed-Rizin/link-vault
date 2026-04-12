@@ -9,10 +9,20 @@ export type EnrichResponse = {
 };
 
 function extractPlainText(html: string): string {
-  let text = html.replace(/<script[^>]*>[\s\S]*?<\/script>/gi, "");
+  // Try to target the main content area to avoid boilerplate
+  const bodyMatch = html.match(/<body[^>]*>([\s\S]*)<\/body>/i);
+  let targetHtml = bodyMatch ? bodyMatch[1] : html;
+  
+  const mainMatch = targetHtml.match(/<article[^>]*>([\s\S]*)<\/article>/i) || 
+                    targetHtml.match(/<main[^>]*>([\s\S]*)<\/main>/i) ||
+                    targetHtml.match(/<div[^>]*class=["'][^"']*(?:content|post|article)[^"']*["'][^>]*>([\s\S]*)<\/div>/i);
+  
+  if (mainMatch) targetHtml = mainMatch[1];
+
+  let text = targetHtml.replace(/<script[^>]*>[\s\S]*?<\/script>/gi, "");
   text = text.replace(/<style[^>]*>[\s\S]*?<\/style>/gi, "");
   text = text.replace(/<[^>]+>/g, " ");
-  return text.replace(/\s+/g, " ").trim().substring(0, 15000);
+  return text.replace(/\s+/g, " ").trim().substring(0, 12000);
 }
 
 async function summarizeWithAI(
@@ -20,7 +30,7 @@ async function summarizeWithAI(
   defaultTitle: string | null,
   description?: string | null,
   existingCategories?: string[],
-): Promise<{ title: string; summary: string; category: string } | null> {
+): Promise<{ title: string; summary: string; category: string; suggestedCategories: string[] } | null> {
   const apiKey = process.env.NEXT_PUBLIC_GEMINI_API_KEY || process.env.GEMINI_API_KEY;
   if (!apiKey) return null;
 
@@ -42,17 +52,31 @@ ${text}
           {
             parts: [
               {
-                text: `Analyze the provided webpage data. Extract or generate:
+                text: `Analyze the provided webpage data for a developer who is a BCA student. 
+
+Extract or generate:
 1. A clean, accurate Title (Heading).
 2. A short, engaging Summary (1-2 sentences).
-3. A ranked list of Suggested Categories (e.g., "AI Tools", "Design", "DevTools", "News", "Resource", etc.).
+3. A ranked list of Suggested Categories.
 
-${existingCategories?.length ? `The available categories are: ${existingCategories.join(", ")}. 
+CRITICAL INSTRUCTION: You MUST prioritize the available categories if they are a strong match: ${existingCategories?.join(", ") || "None yet"}.
 
-CRITICAL INSTRUCTION: You MUST prioritize the available categories. Suggest multiple if relevant. ONLY suggest a NEW category name if there is a 0% match with the existing list. Accuracy and consolidation are the highest priority.` : `Suggest short, professional category names.`}
+TAXONOMY GUIDELINES (Use these for inspiration):
+- Technical: DevOps, Automation, CyberSecurity, SSH, Terminal, Software Development, Cloud Architecture, Databases.
+- Professional: Productivity, Finance, Marketing, Career Growth, Knowledge Management.
+- General: News, Research, Reference.
 
-Return ONLY a valid JSON object strictly matching this format: {"title": "The Title", "summary": "The summary here.", "suggestedCategories": ["Category 1", "Category 2"]}
-IMPORTANT: Never return null or empty strings for any field. If unsure about categories, use "Software" or "Web".
+CATEGORIZATION RULES:
+- NEVER use generic labels like "Web", "Article", "Link", or "General" if the content has a clear technical or professional domain.
+- Force Specificity: If the title mentions "SSH", "Config", or "Workflow", use "DevOps", "Automation", or "SSH".
+- Domain Inference: Look past the website (e.g., Medium, GitHub) and focus on the SUBJECT of the content.
+- Use exact casing from the available categories list.
+- Only suggest a NEW category name if it is significantly more accurate than any available one.
+
+Return ONLY a valid JSON object.
+STRICT FORMAT: {"title": "The Title", "summary": "The summary here.", "suggestedCategories": ["Category 1", "Category 2"]}
+
+FINAL CRITICAL RULE: Accuracy is everything. If the content is technical, use labels like "DevOps", "Automation", or "Software". DO NOT USE "Web" or "Article".
 
 Data to analyze:
 ${contextText}`,
@@ -73,7 +97,8 @@ ${contextText}`,
         return {
           title: parsed.title,
           summary: parsed.summary,
-          category: parsed.suggestedCategories?.[0] || "AI Coding",
+          category: parsed.suggestedCategories?.[0] || "Web",
+          suggestedCategories: parsed.suggestedCategories || [],
         };
       }
     }
@@ -395,12 +420,13 @@ export async function enrichUrl(
     parsedUrl,
   );
 
-  // One final fallback check: If we scraped a site (like LinkedIn or Instagram) and all it gave us was "Sign Up" or "Login", use URL as title
+  // One final fallback check: If we scraped a site and all it gave us was nothing, use URL/hostname
   if (!title && !description) {
+    const fallbackTitle = parsedUrl.hostname.replace(/^www\./, "");
     return {
-      title: parsedUrl.hostname,
-      description: `Link to ${parsedUrl.hostname}`,
-      summary: `Link to ${parsedUrl.hostname}`,
+      title: fallbackTitle,
+      description: `Link to ${fallbackTitle}`,
+      summary: `Link to ${fallbackTitle}`,
       image: null,
       category: "Web",
       suggestedCategories: ["Web"],
@@ -410,7 +436,8 @@ export async function enrichUrl(
   let finalTitle = title;
   let finalDescription = description;
   let finalSummary = description;
-  let finalCategory = "";
+  let finalCategory = "Web";
+  let finalSuggestions: string[] = ["Web"];
 
   const apiKey = process.env.NEXT_PUBLIC_GEMINI_API_KEY || process.env.GEMINI_API_KEY;
 
@@ -427,14 +454,38 @@ export async function enrichUrl(
       finalCategory = aiResult.category || finalCategory;
       // Also update description if summary is better
       if (aiResult.summary) finalDescription = aiResult.summary;
+      finalSuggestions = aiResult.suggestedCategories || [finalCategory];
     }
   }
 
+  const finalCategoryTyped = (finalCategory || "Web") as string;
+
+  // Programmatic Technical Safety Net
+  const techKeywords = ["ssh", "workflow", "automation", "devops", "config", "setup", "linux", "terminal", "powershell"];
+  const lowerTitle = finalTitle?.toLowerCase() || "";
+  const hasTech = techKeywords.some(kw => lowerTitle.includes(kw));
+
+  let categoryToUse = finalCategoryTyped;
+
+  if (hasTech && (categoryToUse === "Web" || categoryToUse === "General")) {
+    if (lowerTitle.includes("ssh")) categoryToUse = "SSH";
+    else if (lowerTitle.includes("workflow") || lowerTitle.includes("automation")) categoryToUse = "Automation";
+    else categoryToUse = "DevOps";
+    
+    // Predpend the smarter category
+    finalSuggestions = [categoryToUse, ...finalSuggestions.filter((s: string) => s !== categoryToUse)];
+  }
+
+  // FINAL ABSOLUTE FALLBACK
+  const resolvedTitle = finalTitle || parsedUrl.hostname.replace(/^www\./, "");
+  const resolvedSummary = finalSummary || finalDescription || `Link to ${resolvedTitle}`;
+
   return {
-    title: finalTitle,
-    description: finalDescription,
-    summary: finalSummary,
+    title: resolvedTitle,
+    description: finalDescription || resolvedSummary,
+    summary: resolvedSummary,
     image,
-    category: finalCategory,
+    category: categoryToUse,
+    suggestedCategories: finalSuggestions,
   };
 }

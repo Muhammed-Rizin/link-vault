@@ -54,14 +54,14 @@ interface VaultContextType {
   setFormState: React.Dispatch<React.SetStateAction<LinkFormState>>;
 
   // High-level Actions
-  openCreateForm: () => void;
   openEditForm: (link: VaultLink) => void;
   handleLogout: () => Promise<void>;
   handleAutoEnrich: () => Promise<void>;
   handleConfirmDelete: () => Promise<void>;
   handleSubmit: (e: React.FormEvent) => Promise<void>;
-  resetForm: (categoryHint?: string) => void;
+  resetForm: (categoryHint?: string, initialUrl?: string) => void;
   handleReorder: (activeId: string, overId: string) => Promise<void>;
+  openCreateForm: (initialUrl?: string) => void;
 }
 
 const VaultContext = React.createContext<VaultContextType | undefined>(undefined);
@@ -74,11 +74,11 @@ function sortLinksByPosition(items: VaultLink[]) {
   return [...items].sort((a, b) => {
     const posA = a.position ?? 0;
     const posB = b.position ?? 0;
-    
+
     if (posA !== posB) {
       return posA - posB;
     }
-    
+
     // Secondary sort: newest first if positions are identical
     const timeA = a.created_at ? new Date(a.created_at).getTime() : 0;
     const timeB = b.created_at ? new Date(b.created_at).getTime() : 0;
@@ -86,9 +86,7 @@ function sortLinksByPosition(items: VaultLink[]) {
   });
 }
 
-function getDefaultCategory() {
-  return "AI Coding";
-}
+
 
 function toFormState(link?: VaultLink, fallbackCategory = ""): LinkFormState {
   if (!link) {
@@ -104,7 +102,7 @@ function toFormState(link?: VaultLink, fallbackCategory = ""): LinkFormState {
   return {
     title: link.title,
     url: link.url,
-    sourceUrl: link.source_url === link.url ? "" : (link.source_url || ""),
+    sourceUrl: link.source_url === link.url ? "" : link.source_url || "",
     category: link.category,
     summary: link.summary ?? "",
     youtubeId: link.youtube_id,
@@ -192,15 +190,20 @@ export function VaultProvider({
         link.title.toLowerCase().includes(term) ||
         (link.summary ?? "").toLowerCase().includes(term) ||
         link.url.toLowerCase().includes(term) ||
-        (link.source_url && link.source_url !== link.url ? link.source_url.toLowerCase().includes(term) : false)
+        (link.source_url && link.source_url !== link.url
+          ? link.source_url.toLowerCase().includes(term)
+          : false)
       );
     });
     return sortLinksByPosition(filtered);
   }, [activeCategory, links, searchQuery]);
 
-  const resetForm = (categoryHint?: string) => {
+  const resetForm = (categoryHint?: string, initialUrl?: string) => {
     const fallback = categoryHint ?? "";
-    setFormState(toFormState(undefined, fallback));
+    setFormState({
+      ...toFormState(undefined, fallback),
+      url: initialUrl ?? "",
+    });
     if (existingCategories.length === 0 || !fallback) {
       setCategoryMode("new");
       setNewCategoryName(fallback);
@@ -213,14 +216,19 @@ export function VaultProvider({
     setFormError(null);
   };
 
-  const openCreateForm = () => {
+  const openCreateForm = (initialUrl?: string) => {
     const hinted = activeCategory !== "All" ? activeCategory : undefined;
-    resetForm(hinted);
+    resetForm(hinted, initialUrl);
     if (hinted && !existingCategories.includes(hinted)) {
       setCategoryMode("new");
       setNewCategoryName(hinted);
     }
     setFormOpen(true);
+
+    // Auto-enrich if URL is provided
+    if (initialUrl?.trim()) {
+      setTimeout(() => handleAutoEnrich(), 100);
+    }
   };
 
   const openEditForm = (link: VaultLink) => {
@@ -266,7 +274,9 @@ export function VaultProvider({
       if (!response.ok) throw new Error("enrich_failed");
       const title = payload.title?.trim() || null;
       const summary = payload.summary?.trim() || payload.description?.trim() || null;
-      const primaryCategory = normalizeCategory(payload.suggestedCategories?.[0] || payload.category || getDefaultCategory());
+      const primaryCategory = normalizeCategory(
+        payload.suggestedCategories?.[0] || payload.category || "Web",
+      );
       const youtubeId = payload.youtubeId || null;
 
       if (!title && !summary) {
@@ -284,7 +294,11 @@ export function VaultProvider({
 
       // Restore category mode mapping based on AI suggestion
       if (primaryCategory) {
-        if (existingCategories.includes(primaryCategory)) {
+        const lowerPrimary = primaryCategory.toLowerCase();
+        const existingMatch = existingCategories.find((cat) => cat.toLowerCase() === lowerPrimary);
+
+        if (existingMatch) {
+          setFormState((prev) => ({ ...prev, category: existingMatch }));
           setCategoryMode("existing");
           setNewCategoryName("");
         } else {
@@ -320,11 +334,7 @@ export function VaultProvider({
       categoryMode === "new"
         ? normalizeCategory(newCategoryName)
         : normalizeCategory(formState.category);
-    if (
-      !formState.title.trim() ||
-      !formState.url.trim() ||
-      !category
-    ) {
+    if (!formState.title.trim() || !formState.url.trim() || !category) {
       setFormError("Title, URL, and Category are required.");
       return;
     }
@@ -340,11 +350,9 @@ export function VaultProvider({
 
     setIsSubmitting(true);
     if (formMode === "create") {
-      // Find max position to put new link at the end (maintaining order)
-      const maxPos = links.length > 0 
-        ? Math.max(...links.map(l => l.position ?? 0)) 
-        : 0;
-      
+      // Find min position to put new link at the top (maintaining order)
+      const minPos = links.length > 0 ? Math.min(...links.map((l) => l.position ?? 0)) : 0;
+
       const { data, error } = await supabase
         .from("vault_links")
         .insert({
@@ -355,9 +363,11 @@ export function VaultProvider({
           status: "Backlog",
           summary: formState.summary.trim() || null,
           youtube_id: formState.youtubeId || null,
-          position: maxPos + 1024, // Append to the end of the manual order
+          position: minPos - 1024, // Append to the top of the manual order
         })
-        .select("id, title, url, source_url, category, status, summary, created_at, youtube_id, position")
+        .select(
+          "id, title, url, source_url, category, status, summary, created_at, youtube_id, position",
+        )
         .single();
       setIsSubmitting(false);
       if (error) {
@@ -366,7 +376,7 @@ export function VaultProvider({
         }
         return setFormError(error.message);
       }
-      setLinks((prev) => sortLinksByPosition([(data as VaultLink), ...prev]));
+      setLinks((prev) => sortLinksByPosition([data as VaultLink, ...prev]));
       setFormOpen(false);
       resetForm(category);
       return;
@@ -387,7 +397,9 @@ export function VaultProvider({
         youtube_id: formState.youtubeId || null,
       })
       .eq("id", editingId)
-      .select("id, title, url, source_url, category, status, summary, created_at, youtube_id, position")
+      .select(
+        "id, title, url, source_url, category, status, summary, created_at, youtube_id, position",
+      )
       .single();
     setIsSubmitting(false);
     if (error) {
@@ -408,7 +420,7 @@ export function VaultProvider({
   const handleReorder = async (activeId: string, overId: string) => {
     const oldIndex = links.findIndex((l) => l.id === activeId);
     const newIndex = links.findIndex((l) => l.id === overId);
-    
+
     if (oldIndex === -1 || newIndex === -1 || oldIndex === newIndex) return;
 
     // 1. Local optimistic update

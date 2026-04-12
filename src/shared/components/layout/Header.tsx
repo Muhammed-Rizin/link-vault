@@ -79,9 +79,9 @@ export function Header() {
             <span>K</span>
           </div>
         </div>
-        <Button size="sm" variant="secondary" onClick={openCreate}>
-          <Plus />
-          Add Link
+        <Button size="sm" variant="secondary" onClick={() => openCreate()} className="shrink-0">
+          <Plus className="size-4" />
+          <span className="hidden sm:inline">Add Link</span>
         </Button>
       </div>
 

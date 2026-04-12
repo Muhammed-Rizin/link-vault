@@ -25,10 +25,11 @@ import { Badge } from "@/shared/components/ui/badge";
 import { useVault } from "../context/VaultContext";
 import { VaultCard } from "./VaultCard";
 import { VaultCardSkeleton } from "./VaultCardSkeleton";
-import { Loader2, Save } from "lucide-react";
+import { Loader2 } from "lucide-react";
+import { VaultLink } from "@/shared/services/supabase";
 
 interface SortableVaultCardProps {
-  link: any;
+  link: VaultLink;
   isMenuOpen: boolean;
   onOpenDetails: () => void;
   onToggleMenu: () => void;
@@ -37,19 +38,12 @@ interface SortableVaultCardProps {
 }
 
 function SortableVaultCard({ link, ...props }: SortableVaultCardProps) {
-  const {
-    attributes,
-    listeners,
-    setNodeRef,
-    transform,
-    transition,
-    isDragging,
-  } = useSortable({ 
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: link.id,
     data: {
-      type: 'link',
+      type: "link",
       link,
-    }
+    },
   });
 
   const style = {
@@ -59,11 +53,7 @@ function SortableVaultCard({ link, ...props }: SortableVaultCardProps) {
   };
 
   return (
-    <div
-      ref={setNodeRef}
-      style={style}
-      className="h-full outline-none"
-    >
+    <div ref={setNodeRef} style={style} className="h-full outline-none">
       <div {...attributes} {...listeners} className="h-full touch-none">
         <VaultCard link={link} {...props} />
       </div>
@@ -90,8 +80,6 @@ export function VaultGrid() {
     setDeletingLink,
     menuOpenId,
     setMenuOpenId,
-    activeCategory,
-    searchQuery,
     handleReorder,
     isReordering,
   } = useVault();
@@ -107,7 +95,7 @@ export function VaultGrid() {
     }),
     useSensor(KeyboardSensor, {
       coordinateGetter: sortableKeyboardCoordinates,
-    })
+    }),
   );
 
   function handleDragStart(event: DragStartEvent) {
@@ -116,14 +104,14 @@ export function VaultGrid() {
 
   function handleDragEnd(event: DragEndEvent) {
     const { active, over } = event;
-    
-    // DEBUG: This confirms if the drop target is being correctly identified
+
+    // DEBUG : This confirms if the drop target is being correctly identified
     console.log(`[DnD] Drop attempt. Active: ${active.id}, Over: ${over?.id}`);
 
     if (over && active.id !== over.id) {
       handleReorder(active.id as string, over.id as string);
     }
-    
+
     setActiveId(null);
   }
 
@@ -181,10 +169,7 @@ export function VaultGrid() {
             CRITICAL: The SortableContext MUST receive the array of IDs that exactly matches the 
             IDs of the children it is managing.
           */}
-          <SortableContext 
-            items={links.map((l) => l.id)} 
-            strategy={rectSortingStrategy}
-          >
+          <SortableContext items={links.map((l) => l.id)} strategy={rectSortingStrategy}>
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {links.map((link) => (
                 <SortableVaultCard
