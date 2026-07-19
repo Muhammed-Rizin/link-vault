@@ -19,17 +19,12 @@ export function LandingPage({ isLoggedIn }: { isLoggedIn: boolean }) {
   };
 
   return (
-    <div className="min-h-screen bg-[#050505] text-white selection:bg-primary/30 selection:text-white overflow-x-hidden">
+    <div className="min-h-screen bg-[#0a0a0a] text-white selection:bg-white/20 selection:text-white overflow-x-hidden">
       <AuthModal
         isOpen={isAuthModalOpen}
         onOpenChange={setIsAuthModalOpen}
         defaultMode={authMode}
       />
-      
-      {/* Dynamic Background Mesh */}
-      <div className="fixed inset-0 -z-10 bg-[#050505]">
-        <div className="absolute top-0 right-0 h-[600px] w-[600px] rounded-full bg-primary/5 blur-[120px] opacity-40 translate-x-[10%] translate-y-[-20%]"></div>
-      </div>
 
       <LandingHeader 
         isLoggedIn={isLoggedIn} 

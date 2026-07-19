@@ -17,49 +17,15 @@ import {
 import {
   SortableContext,
   sortableKeyboardCoordinates,
-  rectSortingStrategy,
-  useSortable,
+  verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
-import { CSS } from "@dnd-kit/utilities";
 import { Badge } from "@/shared/components/ui/badge";
 import { useVault } from "../context/VaultContext";
 import { VaultCard } from "./VaultCard";
+import { SortableVaultRow } from "./VaultListView";
 import { VaultCardSkeleton } from "./VaultCardSkeleton";
-import { Loader2 } from "lucide-react";
-import { VaultLink } from "@/shared/services/supabase";
-
-interface SortableVaultCardProps {
-  link: VaultLink;
-  isMenuOpen: boolean;
-  onOpenDetails: () => void;
-  onToggleMenu: () => void;
-  onEdit: () => void;
-  onDelete: () => void;
-}
-
-function SortableVaultCard({ link, ...props }: SortableVaultCardProps) {
-  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
-    id: link.id,
-    data: {
-      type: "link",
-      link,
-    },
-  });
-
-  const style = {
-    transform: CSS.Translate.toString(transform),
-    transition,
-    opacity: isDragging ? 0.3 : 1,
-  };
-
-  return (
-    <div ref={setNodeRef} style={style} className="h-full outline-none">
-      <div {...attributes} {...listeners} className="h-full touch-none">
-        <VaultCard link={link} {...props} />
-      </div>
-    </div>
-  );
-}
+import { Loader2, Sparkles } from "lucide-react";
+import { Skeleton } from "@/shared/components/ui/skeleton";
 
 const dropAnimation: DropAnimation = {
   sideEffects: defaultDropAnimationSideEffects({
@@ -77,11 +43,14 @@ export function VaultGrid() {
     isInitialLoading,
     setSelectedLink,
     openEditForm,
+    openCreateForm,
     setDeletingLink,
     menuOpenId,
     setMenuOpenId,
     handleReorder,
     isReordering,
+    viewMode,
+    activeCategory,
   } = useVault();
 
   const [activeId, setActiveId] = React.useState<string | null>(null);
@@ -90,7 +59,7 @@ export function VaultGrid() {
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: {
-        distance: 12, // Increased for mobile stability
+        distance: 12,
       },
     }),
     useSensor(KeyboardSensor, {
@@ -104,9 +73,6 @@ export function VaultGrid() {
 
   function handleDragEnd(event: DragEndEvent) {
     const { active, over } = event;
-
-    // DEBUG : This confirms if the drop target is being correctly identified
-    console.log(`[DnD] Drop attempt. Active: ${active.id}, Over: ${over?.id}`);
 
     if (over && active.id !== over.id) {
       handleReorder(active.id as string, over.id as string);
@@ -122,6 +88,16 @@ export function VaultGrid() {
   if (isInitialLoading) {
     return (
       <main className="flex-1 overflow-y-auto px-4 py-5 md:px-6">
+        <div className="mb-5 gap-3">
+          <div className="flex items-center gap-2.5">
+            <h2 className="text-xl font-bold tracking-tight text-foreground sm:text-2xl">
+              {activeCategory === "All" ? "Link Vault" : activeCategory}
+            </h2>
+          </div>
+          <div className="mt-1 flex items-center gap-2 text-xs text-zinc-400 font-normal">
+            <Skeleton className="h-5 w-80 bg-[#262626]" />
+          </div>
+        </div>
         <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {Array.from({ length: 9 }).map((_, index) => (
             <VaultCardSkeleton key={`skeleton-${index}`} />
@@ -133,31 +109,69 @@ export function VaultGrid() {
 
   return (
     <main className="flex-1 overflow-y-auto px-4 py-5 md:px-6">
-      <div className="mb-5 flex items-center justify-between">
+      <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h2 className="text-xl font-(family-name:--font-geist) font-bold text-foreground sm:text-2xl">
-            Link Vault
-          </h2>
-          <div className="mt-1 flex items-center gap-2 text-sm text-muted-foreground">
-            <span>Drag to rearrange. Changes persist automatically.</span>
+          <div className="flex items-center gap-2.5">
+            <h2 className="text-xl font-bold tracking-tight text-foreground sm:text-2xl">
+              {activeCategory === "All" ? "Link Vault" : activeCategory}
+            </h2>
+            <Badge
+              variant="outline"
+              className="font-semibold text-xs border-[#262626] bg-[#0a0a0a] text-zinc-300 px-2 py-0.5"
+            >
+              {links.length} {links.length === 1 ? "link" : "links"}
+            </Badge>
+          </div>
+          <div className="mt-1 flex items-center gap-2 text-xs text-zinc-400 font-normal">
+            {viewMode === "list" ? (
+              <span>Drag list rows to reorder priority. Changes persist automatically.</span>
+            ) : (
+              <span>Saved web research and AI summaries.</span>
+            )}
             {isReordering && (
-              <span className="flex items-center gap-1.5 text-primary font-medium animate-pulse">
-                <Loader2 className="size-3 animate-spin" />
-                Saving...
+              <span className="flex items-center gap-1.5 text-white font-semibold animate-pulse">
+                <Loader2 className="size-3 animate-spin text-white" />
+                Saving order...
               </span>
             )}
           </div>
         </div>
-        <Badge variant="outline">{links.length} links</Badge>
       </div>
 
       {!links.length ? (
-        <div className="mt-10 rounded-xl border border-dashed border-border p-8 text-center">
-          <p className="text-sm text-muted-foreground">
-            No links match this filter. Add one with the button above.
+        <div className="mt-12 flex flex-col items-center justify-center rounded-lg border border-dashed border-[#262626] p-12 text-center bg-[#141414]">
+          <div className="grid size-12 place-items-center rounded-md border border-[#262626] bg-[#0a0a0a] text-white mb-4">
+            <Sparkles className="size-6" />
+          </div>
+          <h3 className="text-base font-bold text-white">No links found</h3>
+          <p className="mt-1 max-w-sm text-xs text-zinc-400">
+            No links match your current filter or search criteria. Add your first research link to
+            populate your vault.
           </p>
+          <button
+            onClick={() => openCreateForm()}
+            className="mt-5 inline-flex items-center gap-2 rounded-md bg-white px-4 py-2 text-xs font-semibold text-black hover:bg-zinc-200 transition-colors"
+          >
+            Add First Link
+          </button>
+        </div>
+      ) : viewMode === "grid" ? (
+        /* Grid View: Static, Non-Draggable Grid Cards */
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {links.map((link) => (
+            <VaultCard
+              key={link.id}
+              link={link}
+              isMenuOpen={menuOpenId === link.id}
+              onOpenDetails={() => setSelectedLink(link)}
+              onToggleMenu={() => setMenuOpenId(menuOpenId === link.id ? null : link.id)}
+              onEdit={() => openEditForm(link)}
+              onDelete={() => setDeletingLink(link)}
+            />
+          ))}
         </div>
       ) : (
+        /* List View: Draggable Sortable List Rows */
         <DndContext
           sensors={sensors}
           collisionDetection={closestCorners}
@@ -165,14 +179,10 @@ export function VaultGrid() {
           onDragEnd={handleDragEnd}
           onDragCancel={handleDragCancel}
         >
-          {/* 
-            CRITICAL: The SortableContext MUST receive the array of IDs that exactly matches the 
-            IDs of the children it is managing.
-          */}
-          <SortableContext items={links.map((l) => l.id)} strategy={rectSortingStrategy}>
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <SortableContext items={links.map((l) => l.id)} strategy={verticalListSortingStrategy}>
+            <div className="flex flex-col gap-2.5">
               {links.map((link) => (
-                <SortableVaultCard
+                <SortableVaultRow
                   key={link.id}
                   link={link}
                   isMenuOpen={menuOpenId === link.id}
@@ -187,8 +197,8 @@ export function VaultGrid() {
 
           <DragOverlay adjustScale dropAnimation={dropAnimation}>
             {activeId && activeLink ? (
-              <div className="h-full w-full rotate-1 scale-105 cursor-grabbing opacity-90 shadow-2xl">
-                <VaultCard
+              <div className="h-full w-full rotate-1 scale-102 cursor-grabbing opacity-90 shadow-2xl">
+                <SortableVaultRow
                   link={activeLink}
                   isMenuOpen={false}
                   onOpenDetails={() => {}}

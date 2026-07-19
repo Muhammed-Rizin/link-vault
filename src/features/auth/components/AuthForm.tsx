@@ -61,39 +61,38 @@ export function AuthForm({ mode, onCancel }: AuthFormProps) {
   const isSignup = currentMode === "signup";
 
   return (
-    <Card className="border-border/80 bg-card w-full max-w-md shadow-2xl">
-      <CardHeader className="pb-3 px-8 pt-8">
-        <div className="flex items-start justify-between gap-3">
-          <div className="flex min-w-0 items-start gap-4">
-            <div className="mt-1 p-2 rounded-lg border border-border/80 bg-background/40">
-              <Logo iconClassName="size-7" showText={false} />
-            </div>
-            <div className="min-w-0">
-              <CardTitle className="text-balance text-xl font-bold tracking-tight">
-                {isSignup ? "Create Vault" : "Welcome Back"}
-              </CardTitle>
-              <CardDescription className="mt-1 text-sm font-medium">
-                {isSignup
-                  ? "Join high-signal web research."
-                  : "Access your digital second brain."}
-              </CardDescription>
-            </div>
+    <Card className="border-[#262626] bg-[#141414] w-full max-w-md shadow-2xl rounded-lg overflow-hidden relative">
+      {onCancel && (
+        <Button
+          size="icon-xs"
+          variant="ghost"
+          onClick={onCancel}
+          aria-label="Close"
+          className="absolute top-4 right-4 z-10 rounded text-zinc-400 hover:bg-[#262626]"
+        >
+          <X className="size-4" />
+        </Button>
+      )}
+
+      <CardHeader className="pb-3 px-6 pt-6 border-b border-[#262626] text-center">
+        <div className="flex flex-col items-center gap-3">
+          <div className="p-3 rounded-lg border border-[#262626] bg-[#0a0a0a]">
+            <Logo iconClassName="size-8" showText={false} />
           </div>
-          {onCancel && (
-            <Button
-              size="icon-sm"
-              variant="ghost"
-              onClick={onCancel}
-              aria-label="Close"
-              className="rounded-full"
-            >
-              <X className="size-5" />
-            </Button>
-          )}
+          <div>
+            <CardTitle className="text-balance text-lg font-bold tracking-tight text-white">
+              {isSignup ? "Create vault account" : "Welcome back"}
+            </CardTitle>
+            <CardDescription className="mt-1 text-xs font-normal text-zinc-400">
+              {isSignup
+                ? "Join high-signal web research."
+                : "Access your digital second brain."}
+            </CardDescription>
+          </div>
         </div>
       </CardHeader>
 
-      <CardContent className="space-y-6 px-8 pb-10 pt-4">
+      <CardContent className="space-y-5 px-6 pb-6 pt-5">
         <AnimatePresence mode="wait">
           <motion.form
             key={currentMode}
@@ -103,41 +102,41 @@ export function AuthForm({ mode, onCancel }: AuthFormProps) {
             exit="exit"
             transition={{ duration: 0.18, ease: "easeOut" }}
             onSubmit={handleSubmit}
-            className="space-y-4"
+            className="space-y-3.5"
           >
             {isSignup && (
               <div className="relative">
-                <User className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+                <User className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-zinc-500" />
                 <Input
-                  placeholder="Full Name"
+                  placeholder="Full name"
                   value={fullName}
                   onChange={(e) => setFullName(e.target.value)}
-                  className="bg-background/40 pl-9 border-border/80 h-11"
+                  className="bg-[#0a0a0a] pl-9 border-[#262626] h-10 rounded-md text-xs"
                   required
                 />
               </div>
             )}
 
             <div className="relative">
-              <Mail className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+              <Mail className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-zinc-500" />
               <Input
                 type="email"
                 placeholder="name@example.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="bg-background/40 pl-9 border-border/80 h-11"
+                className="bg-[#0a0a0a] pl-9 border-[#262626] h-10 rounded-md text-xs"
                 required
               />
             </div>
 
             <div className="relative">
-              <Lock className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+              <Lock className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-zinc-500" />
               <Input
                 type="password"
                 placeholder="••••••••"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="bg-background/40 pl-9 border-border/80 h-11"
+                className="bg-[#0a0a0a] pl-9 border-[#262626] h-10 rounded-md text-xs"
                 required
               />
             </div>
@@ -146,14 +145,14 @@ export function AuthForm({ mode, onCancel }: AuthFormProps) {
               <motion.div 
                 initial={{ opacity: 0, y: 5 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="text-xs text-destructive font-bold bg-destructive/10 p-3 rounded-lg border border-destructive/20 text-center"
+                className="text-xs text-red-400 font-semibold bg-red-500/10 p-2.5 rounded-md border border-red-500/20 text-center"
               >
                 {error}
               </motion.div>
             )}
 
-            <Button type="submit" disabled={isSubmitting} className="w-full h-11 font-bold text-sm bg-primary hover:bg-primary/90 text-black shadow-lg shadow-primary/20 rounded-lg">
-              {isSubmitting ? "Processing..." : isSignup ? "Create My Vault" : "Sign In to Vault"}
+            <Button type="submit" disabled={isSubmitting} className="w-full h-10 font-semibold text-xs bg-white text-black hover:bg-zinc-200 rounded-md transition-colors">
+              {isSubmitting ? "Processing..." : isSignup ? "Create my vault" : "Sign in to vault"}
               <ArrowRight className="ml-2 size-4" />
             </Button>
           </motion.form>
@@ -161,19 +160,19 @@ export function AuthForm({ mode, onCancel }: AuthFormProps) {
 
         <div className="relative">
           <div className="absolute inset-0 flex items-center">
-            <span className="w-full border-t border-border/80" />
+            <span className="w-full border-t border-[#262626]" />
           </div>
-          <div className="relative flex justify-center text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
-            <span className="bg-card px-3">Instant Access</span>
+          <div className="relative flex justify-center text-[10px] font-semibold uppercase tracking-widest text-zinc-500">
+            <span className="bg-[#141414] px-2">Instant access</span>
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-2 gap-2.5">
           <Button
             variant="outline"
             onClick={() => handleOAuth("google")}
             disabled={oauthLoading !== null}
-            className="bg-background/40 border-border/80 h-11 font-bold rounded-lg hover:bg-muted/50"
+            className="bg-[#0a0a0a] border-[#262626] h-10 font-semibold text-xs rounded-md hover:bg-[#1c1c1c] text-white"
           >
             <GoogleIcon className="size-4 mr-2" />
             Google
@@ -182,16 +181,16 @@ export function AuthForm({ mode, onCancel }: AuthFormProps) {
             variant="outline"
             onClick={() => handleOAuth("github")}
             disabled={oauthLoading !== null}
-            className="bg-background/40 border-border/80 h-11 font-bold rounded-lg hover:bg-muted/50"
+            className="bg-[#0a0a0a] border-[#262626] h-10 font-semibold text-xs rounded-md hover:bg-[#1c1c1c] text-white"
           >
             <Github className="size-4 mr-2" />
             GitHub
           </Button>
         </div>
 
-        <p className="text-center text-sm text-muted-foreground font-medium pt-2">
+        <p className="text-center text-xs text-zinc-400 font-normal pt-1">
           {isSignup ? "Already have an account?" : "New to LinkVault?"}{" "}
-          <button onClick={handleToggleMode} className="font-bold text-foreground hover:text-primary transition-colors underline underline-offset-4 decoration-border">
+          <button onClick={handleToggleMode} className="font-semibold text-white hover:underline underline-offset-4">
             {isSignup ? "Sign in" : "Create one"}
           </button>
         </p>

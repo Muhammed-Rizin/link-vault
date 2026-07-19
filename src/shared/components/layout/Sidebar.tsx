@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { ChevronLeft, ChevronRight, Folders, LogOut, UserCircle } from "lucide-react";
+import { ChevronLeft, ChevronRight, Folders, LogOut } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Button } from "@/shared/components/ui/button";
@@ -51,47 +51,52 @@ export function Sidebar({ userEmail, userAvatarUrl }: SidebarProps) {
   return (
     <aside
       className={cn(
-        "hidden shrink-0 overflow-hidden border-r border-sidebar-border bg-sidebar/95 transition-[width] duration-300 md:flex md:flex-col",
-        collapsed ? "w-[4.4rem]" : "w-72",
+        "hidden shrink-0 overflow-hidden border-r border-sidebar-border bg-sidebar/95 backdrop-blur-xl transition-[width] duration-300 md:flex md:flex-col",
+        collapsed ? "w-[4.5rem]" : "w-72",
       )}
     >
-      <div className="flex h-14 items-center justify-between border-b border-sidebar-border px-3">
-        <div className={cn("flex items-center gap-2", collapsed && "justify-center")}>
-          <div className="grid size-8 place-items-center rounded-md border border-border/80 bg-muted/60">
+      <div className="flex h-16 items-center justify-between border-b border-sidebar-border px-4">
+        <div className={cn("flex items-center gap-3", collapsed && "justify-center")}>
+          <div className="grid size-9 place-items-center rounded-lg border border-primary/30 bg-primary/10 text-primary shadow-sm">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/icon.svg" alt="Link Vault" className="size-4" />
+            <img src="/icon.svg" alt="Link Vault" className="size-4.5" />
           </div>
           {!collapsed && (
-            <span className="truncate font-(family-name:--font-geist) text-sm font-semibold tracking-tight">
+            <span className="truncate text-base font-bold tracking-tight text-foreground">
               Link Vault
             </span>
           )}
         </div>
-        <Button size="icon-sm" variant="ghost" onClick={() => setCollapsed(!collapsed)}>
-          {collapsed ? <ChevronRight /> : <ChevronLeft />}
+        <Button
+          size="icon-xs"
+          variant="ghost"
+          onClick={() => setCollapsed(!collapsed)}
+          className="rounded-lg text-muted-foreground hover:bg-accent"
+        >
+          {collapsed ? <ChevronRight className="size-4" /> : <ChevronLeft className="size-4" />}
         </Button>
       </div>
 
       <div className="flex flex-1 flex-col overflow-hidden">
-        <div className="px-2 py-3 border-b border-sidebar-border/50">
+        <div className="px-3 py-3 border-b border-sidebar-border/50">
           <Link
             href="/"
             className={cn(
-              "flex h-9 items-center gap-2 rounded-lg border border-transparent px-2 text-sm transition-colors",
+              "flex h-10 items-center gap-3 rounded-lg border border-transparent px-3 text-sm font-semibold transition-all",
               !isProfile
-                ? "border-border bg-accent text-accent-foreground shadow-sm"
-                : "text-muted-foreground hover:bg-accent/70",
+                ? "border-primary/20 bg-primary/10 text-primary shadow-sm"
+                : "text-muted-foreground hover:bg-accent/60 hover:text-foreground",
               collapsed && "justify-center px-1",
             )}
           >
             <Folders className="size-4 shrink-0" />
-            {!collapsed && <span className="truncate font-medium">Vault</span>}
+            {!collapsed && <span className="truncate">All Vault Items</span>}
           </Link>
         </div>
 
-        <div className="flex flex-1 flex-col gap-1 overflow-y-auto px-2 py-3">
+        <div className="flex flex-1 flex-col gap-1 overflow-y-auto px-3 py-3">
           {!collapsed && (
-            <p className="px-2 pb-1 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
+            <p className="px-2 pb-1.5 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
               Categories
             </p>
           )}
@@ -110,19 +115,26 @@ export function Sidebar({ userEmail, userAvatarUrl }: SidebarProps) {
                   }
                 }}
                 className={cn(
-                  "flex h-9 items-center gap-2 rounded-lg border border-transparent px-2 text-sm transition-colors",
+                  "flex h-9.5 items-center gap-3 rounded-lg border border-transparent px-3 text-xs font-semibold transition-all",
                   active
-                    ? "border-border bg-accent text-accent-foreground"
-                    : "text-muted-foreground hover:bg-accent/70",
+                    ? "bg-primary text-primary-foreground font-bold shadow-md shadow-primary/20"
+                    : "text-muted-foreground hover:bg-accent/60 hover:text-foreground",
                   collapsed && "justify-center px-1",
                 )}
               >
-                <Folders className="size-4 shrink-0 opacity-70" />
+                <Folders className={cn("size-4 shrink-0", active ? "opacity-100" : "opacity-60")} />
                 {!collapsed && (
                   <>
                     <span className="truncate">{category}</span>
-                    <span className="ml-auto text-[11px] font-medium opacity-50">
-                      {countsByCategory[category]}
+                    <span
+                      className={cn(
+                        "ml-auto text-[11px] font-bold px-2 py-0.5 rounded-full",
+                        active
+                          ? "bg-primary-foreground/20 text-primary-foreground"
+                          : "bg-muted text-muted-foreground",
+                      )}
+                    >
+                      {countsByCategory[category] ?? 0}
                     </span>
                   </>
                 )}
@@ -134,13 +146,16 @@ export function Sidebar({ userEmail, userAvatarUrl }: SidebarProps) {
 
       <div className="border-t border-sidebar-border p-3">
         <div
-          className={cn("rounded-xl border border-border/80 bg-card/70 p-2.5 shadow-sm", collapsed && "px-1")}
+          className={cn(
+            "rounded-2xl border border-border/80 bg-card/60 p-3 shadow-sm",
+            collapsed && "px-1.5",
+          )}
         >
           <Link
             href="/profile"
             className={cn(
-              "flex items-center gap-2 rounded-lg transition-all duration-200 group",
-              collapsed && "justify-center"
+              "flex items-center gap-3 rounded-lg transition-all duration-200 group",
+              collapsed && "justify-center",
             )}
           >
             {userAvatarUrl ? (
@@ -148,30 +163,32 @@ export function Sidebar({ userEmail, userAvatarUrl }: SidebarProps) {
               <img
                 src={userAvatarUrl}
                 alt=""
-                className="size-8 rounded-full border border-border/80 object-cover group-hover:ring-2 group-hover:ring-primary/20"
+                className="size-8.5 rounded-full border border-border/80 object-cover group-hover:ring-2 group-hover:ring-primary/40"
               />
             ) : (
-              <div className="grid size-8 place-items-center rounded-full border border-border/80 bg-muted text-xs font-semibold text-muted-foreground group-hover:bg-accent group-hover:text-primary transition-colors">
+              <div className="grid size-8.5 place-items-center rounded-full border border-primary/20 bg-primary/10 text-xs font-bold text-primary transition-colors">
                 {getInitials(userEmail)}
               </div>
             )}
             {!collapsed && (
               <div className="min-w-0">
-                <p className="truncate text-[13px] font-semibold group-hover:text-primary transition-colors">{userEmail}</p>
-                <p className="text-[11px] text-muted-foreground">My Profile</p>
+                <p className="truncate text-xs font-bold text-foreground group-hover:text-primary transition-colors">
+                  {userEmail}
+                </p>
+                <p className="text-[10px] font-semibold text-muted-foreground">My Account</p>
               </div>
             )}
           </Link>
-          
+
           {!collapsed && (
-            <div className="mt-3 pt-3 border-t border-sidebar-border/50">
+            <div className="mt-3 pt-2.5 border-t border-sidebar-border/50">
               <Button
                 type="button"
                 variant="ghost"
                 size="xs"
                 onClick={handleLogout}
                 disabled={isSigningOut}
-                className="h-8 gap-2 text-muted-foreground hover:text-destructive hover:bg-destructive/10 justify-start px-2 w-full transition-colors"
+                className="h-8 gap-2 text-muted-foreground hover:text-destructive hover:bg-destructive/10 justify-start px-2 w-full transition-colors rounded-lg font-semibold text-xs"
               >
                 <LogOut className="size-3.5" />
                 <span>{isSigningOut ? "Signing out..." : "Logout"}</span>
@@ -185,7 +202,7 @@ export function Sidebar({ userEmail, userAvatarUrl }: SidebarProps) {
               size="icon-xs"
               onClick={handleLogout}
               disabled={isSigningOut}
-              className="mt-2 w-full h-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
+              className="mt-2 w-full h-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors rounded-lg"
             >
               <LogOut className="size-3.5" />
             </Button>

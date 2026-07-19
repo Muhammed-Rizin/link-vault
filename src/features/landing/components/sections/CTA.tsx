@@ -28,41 +28,35 @@ function Star({ className, ...props }: React.SVGProps<SVGSVGElement>) {
 
 export function CTA({ isLoggedIn, onOpenSignup }: CTAProps) {
   return (
-    <section className="py-10 md:py-20 relative overflow-hidden">
+    <section className="py-16 md:py-24 relative overflow-hidden bg-[#0a0a0a] border-t border-[#262626]">
       <div className="container mx-auto px-6 relative z-10">
         <motion.div
-          initial={{ opacity: 0, y: 40 }}
+          initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          className="relative overflow-hidden rounded-[4rem] border border-white/5 bg-card/60 p-12 py-24 text-center backdrop-blur-3xl shadow-2xl"
+          className="max-w-5xl mx-auto relative overflow-hidden rounded-lg border border-[#262626] bg-[#141414] p-8 py-16 text-center"
         >
-          <div className="relative z-10 max-w-3xl mx-auto">
-            <h2 className="mb-8 text-5xl font-black md:text-7xl lg:text-9xl tracking-tighter leading-none">
-              Build your <span className="text-primary italic">Vault</span> <br /> today.
+          <div className="relative z-10 max-w-2xl mx-auto">
+            <h2 className="mb-4 text-3xl font-bold md:text-5xl tracking-tight leading-none text-white">
+              Build your vault today.
             </h2>
-            <p className="mb-12 text-xl text-white/50 font-medium tracking-tight">
-              Capture the web. Simplify your research life.
+            <p className="mb-8 text-sm text-zinc-400 font-normal">
+              Capture high-value web links. Simplify your research workflow with AI intelligence.
             </p>
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-6">
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
               <Button
-                size="lg"
-                className="h-16 rounded-2xl px-12 text-xl font-black hover:scale-105 transition-transform shadow-[0_0_40px_rgba(var(--primary-rgb),0.2)]"
-                onClick={() =>
-                  isLoggedIn ? (window.location.href = "/links") : onOpenSignup()
-                }
+                size="default"
+                className="h-11 rounded-md px-8 text-xs font-semibold bg-white text-black hover:bg-zinc-200 transition-colors"
+                onClick={() => (isLoggedIn ? (window.location.href = "/links") : onOpenSignup())}
               >
-                {isLoggedIn ? "Access Dashboard" : "Get Started Now"}
+                {isLoggedIn ? "Access vault dashboard" : "Get started free"}
               </Button>
-              <div className="flex items-center gap-2 text-white/30 text-[10px] font-bold uppercase tracking-[0.2em]">
-                <Star className="size-3.5 text-primary fill-primary/40" />
-                <span>Free forever for individuals</span>
+              <div className="flex items-center gap-2 text-zinc-400 text-xs font-medium">
+                <Star className="size-3.5 text-zinc-400 fill-zinc-400" />
+                <span>Free for personal research</span>
               </div>
             </div>
           </div>
-
-          {/* Background decorative glow */}
-          <div className="absolute -bottom-20 -left-20 size-80 bg-primary/10 blur-[100px] rounded-full"></div>
-          <div className="absolute -top-20 -right-20 size-80 bg-blue-500/10 blur-[100px] rounded-full"></div>
         </motion.div>
       </div>
     </section>

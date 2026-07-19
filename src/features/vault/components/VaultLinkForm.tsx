@@ -2,12 +2,11 @@
 
 import * as React from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { Check, Loader2, Sparkles, X } from "lucide-react";
+import { Loader2, Sparkles, X } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/components/ui/card";
 import { Input } from "@/shared/components/ui/input";
 import { Skeleton } from "@/shared/components/ui/skeleton";
-import { Badge } from "@/shared/components/ui/badge";
 import { cn } from "@/shared/utils/utils";
 import { CategoryPicker } from "./CategoryPicker";
 import { useVault } from "../context/VaultContext";
@@ -37,27 +36,35 @@ export function VaultLinkForm() {
     [categories]
   );
 
+  const handleClose = React.useCallback(() => {
+    setFormOpen(false);
+    resetForm();
+  }, [setFormOpen, resetForm]);
+
   return (
     <AnimatePresence>
       {formOpen && (
         <motion.div
-          className="fixed inset-0 z-50 grid place-items-center bg-black/55 px-4 backdrop-blur-sm"
+          className="fixed inset-0 z-50 grid place-items-center bg-black/70 px-4 backdrop-blur-sm"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
+          onClick={handleClose}
         >
           <motion.div
-            initial={{ opacity: 0, y: 10, scale: 0.99 }}
+            initial={{ opacity: 0, y: 10, scale: 0.98 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 8, scale: 0.99 }}
+            exit={{ opacity: 0, y: 6, scale: 0.98 }}
+            transition={{ duration: 0.16, ease: "easeOut" }}
             className="w-full max-w-xl"
+            onClick={(e) => e.stopPropagation()}
           >
-            <Card className="border-border/80 bg-card overflow-hidden">
-              <CardHeader className="relative">
+            <Card className="border-[#262626] bg-[#141414] shadow-2xl overflow-hidden rounded-xl">
+              <CardHeader className="relative pb-3 px-6 pt-5 border-b border-[#262626]">
                 {isEnriching && (
-                  <div className="absolute inset-x-0 top-0 h-1 bg-muted overflow-hidden">
+                  <div className="absolute inset-x-0 top-0 h-1 bg-[#262626] overflow-hidden">
                     <motion.div 
-                      className="h-full bg-primary"
+                      className="h-full bg-white"
                       initial={{ width: "0%" }}
                       animate={{ width: "100%" }}
                       transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
@@ -65,77 +72,89 @@ export function VaultLinkForm() {
                   </div>
                 )}
                 <div className="flex items-start justify-between gap-4">
-                  <div>
-                    <CardTitle className="flex items-center gap-2">
-                      {formMode === "create" ? "Add Link To Vault" : "Edit Link"}
-                      {isEnriching && <Loader2 className="size-4 animate-spin text-primary" />}
-                    </CardTitle>
-                    <CardDescription>
-                      Save URL, source URL, dynamic category, and summary.
-                    </CardDescription>
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 rounded-md border border-[#262626] bg-[#0a0a0a] text-white">
+                      <Sparkles className="size-4" />
+                    </div>
+                    <div>
+                      <CardTitle className="flex items-center gap-2 text-base font-bold text-white">
+                        {formMode === "create" ? "Add link to vault" : "Edit link"}
+                        {isEnriching && <Loader2 className="size-3.5 animate-spin text-white" />}
+                      </CardTitle>
+                      <CardDescription className="text-xs font-normal text-zinc-400 mt-0.5">
+                        Save target URL, source URL, dynamic category, and summary.
+                      </CardDescription>
+                    </div>
                   </div>
                   <Button
-                    size="icon-sm"
+                    size="icon-xs"
                     variant="ghost"
-                    onClick={() => {
-                      setFormOpen(false);
-                      resetForm();
-                    }}
+                    onClick={handleClose}
+                    className="rounded text-zinc-400 hover:bg-[#262626]"
                   >
-                    <X />
+                    <X className="size-4" />
                   </Button>
                 </div>
               </CardHeader>
-              <CardContent>
+
+              <CardContent className="px-6 py-4">
                 <form onSubmit={handleSubmit} className="space-y-4">
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium">URL</label>
+                  <div className="space-y-1">
+                    <label className="text-[11px] font-semibold text-zinc-400">
+                      Target URL
+                    </label>
                     <div className="flex gap-2">
                       <Input
                         value={formState.url}
                         onChange={(e) => setFormState((prev) => ({ ...prev, url: e.target.value }))}
                         placeholder="https://example.com/article"
                         required
-                        className={cn("flex-1", isEnriching && "opacity-50 pointer-events-none")}
+                        className={cn("flex-1 h-9 bg-[#0a0a0a] border-[#262626] rounded-md text-xs", isEnriching && "opacity-50 pointer-events-none")}
                       />
                       <Button
                         type="button"
                         variant="outline"
                         onClick={handleAutoEnrich}
                         disabled={isEnriching}
-                        className="h-10 px-4"
+                        className="h-9 px-3 font-semibold text-xs border-[#262626] bg-[#0a0a0a] text-white hover:bg-[#262626] rounded-md"
                       >
-                        {isEnriching ? "Enriching..." : "Auto Enrich"}
+                        {isEnriching ? "Enriching..." : "Auto enrich"}
                       </Button>
                     </div>
                   </div>
 
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium">Title</label>
+                  <div className="space-y-1">
+                    <label className="text-[11px] font-semibold text-zinc-400">
+                      Title
+                    </label>
                     {isEnriching ? (
-                      <Skeleton className="h-10 w-full rounded-md" />
+                      <Skeleton className="h-9 w-full rounded-md" />
                     ) : (
                       <Input
                         value={formState.title}
                         onChange={(e) => setFormState((prev) => ({ ...prev, title: e.target.value }))}
                         placeholder="Readable title"
                         required
+                        className="h-9 bg-[#0a0a0a] border-[#262626] rounded-md text-xs"
                       />
                     )}
                   </div>
 
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium">Source URL (Optional)</label>
+                  <div className="space-y-1">
+                    <label className="text-[11px] font-semibold text-zinc-400">
+                      Source URL (optional)
+                    </label>
                     <Input
                       value={formState.sourceUrl}
                       onChange={(e) =>
                         setFormState((prev) => ({ ...prev, sourceUrl: e.target.value }))
                       }
-                      placeholder="https://instagram.com/..."
+                      placeholder="https://instagram.com/..., twitter.com/..."
+                      className="h-9 bg-[#0a0a0a] border-[#262626] rounded-md text-xs"
                     />
                   </div>
 
-                  <div className="space-y-3">
+                  <div className="space-y-2">
                     <CategoryPicker
                       existingCategories={existingCategories}
                       categoryMode={categoryMode}
@@ -149,13 +168,15 @@ export function VaultLinkForm() {
                     />
                   </div>
 
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium">Summary (Optional)</label>
+                  <div className="space-y-1">
+                    <label className="text-[11px] font-semibold text-zinc-400">
+                      Summary (optional)
+                    </label>
                     {isEnriching ? (
-                      <div className="space-y-2">
-                        <Skeleton className="h-4 w-full" />
-                        <Skeleton className="h-4 w-11/12" />
-                        <Skeleton className="h-4 w-4/5" />
+                      <div className="space-y-1.5 p-2.5 rounded-md border border-[#262626] bg-[#0a0a0a]">
+                        <Skeleton className="h-3 w-full" />
+                        <Skeleton className="h-3 w-11/12" />
+                        <Skeleton className="h-3 w-4/5" />
                       </div>
                     ) : (
                       <textarea
@@ -163,28 +184,34 @@ export function VaultLinkForm() {
                         onChange={(e) =>
                           setFormState((prev) => ({ ...prev, summary: e.target.value }))
                         }
-                        rows={4}
-                        className="w-full rounded-lg border border-input/80 bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus-visible:border-ring focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
-                        placeholder="Auto-Enrich can populate this from the URL."
+                        rows={3}
+                        className="w-full rounded-md border border-[#262626] bg-[#0a0a0a] px-3 py-2 text-xs text-white placeholder:text-zinc-500 focus-visible:border-zinc-500 focus-visible:outline-none"
+                        placeholder="Auto-enrich populates this automatically."
                       />
                     )}
                   </div>
 
-                  {formError && <p className="text-sm text-destructive">{formError}</p>}
+                  {formError && (
+                    <p className="text-xs text-red-400 font-semibold bg-red-500/10 p-2.5 rounded-md border border-red-500/20 text-center">
+                      {formError}
+                    </p>
+                  )}
 
-                  <div className="flex items-center justify-end gap-2">
+                  <div className="flex items-center justify-end gap-2 pt-3 border-t border-[#262626]">
                     <Button
                       type="button"
                       variant="ghost"
-                      onClick={() => {
-                        setFormOpen(false);
-                        resetForm();
-                      }}
+                      onClick={handleClose}
+                      className="font-medium text-xs rounded-md text-zinc-400 hover:bg-[#262626]"
                     >
                       Cancel
                     </Button>
-                    <Button type="submit" disabled={isSubmitting || isEnriching}>
-                      {isSubmitting ? "Saving..." : formMode === "create" ? "Save" : "Update"}
+                    <Button
+                      type="submit"
+                      disabled={isSubmitting || isEnriching}
+                      className="h-9 px-4 font-semibold text-xs bg-white text-black hover:bg-zinc-200 rounded-md transition-colors"
+                    >
+                      {isSubmitting ? "Saving..." : formMode === "create" ? "Save to vault" : "Update link"}
                     </Button>
                   </div>
                 </form>

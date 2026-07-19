@@ -6,6 +6,8 @@ import { useVaultNavigation } from "../hooks/useVaultNavigation";
 import { useVaultForm, LinkFormState, FormMode } from "../hooks/useVaultForm";
 import { useVaultActions } from "../hooks/useVaultActions";
 
+export type ViewMode = "grid" | "list";
+
 interface VaultContextType {
   // Navigation State
   collapsedSidebar: boolean;
@@ -18,6 +20,10 @@ interface VaultContextType {
   setSearchQuery: (query: string) => void;
   categories: string[];
   
+  // View Mode State
+  viewMode: ViewMode;
+  setViewMode: (mode: ViewMode) => void;
+
   // Link State
   links: VaultLink[];
   filteredLinks: VaultLink[];
@@ -73,6 +79,7 @@ export function VaultProvider({ children, initialLinks }: { children: React.Reac
   const [deletingLink, setDeletingLink] = React.useState<VaultLink | null>(null);
   const [menuOpenId, setMenuOpenId] = React.useState<string | null>(null);
   const [isInitialLoading, setIsInitialLoading] = React.useState(true);
+  const [viewMode, setViewMode] = React.useState<ViewMode>("grid");
 
   // Modular Hooks
   const nav = useVaultNavigation(links);
@@ -146,6 +153,8 @@ export function VaultProvider({ children, initialLinks }: { children: React.Reac
     ...nav,
     ...form,
     ...actions,
+    viewMode,
+    setViewMode,
     links,
     filteredLinks,
     isInitialLoading,

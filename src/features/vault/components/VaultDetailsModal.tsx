@@ -1,43 +1,38 @@
-"use client"
+/* eslint-disable @next/next/no-img-element */
+"use client";
 
-import * as React from "react"
-import { AnimatePresence, motion } from "framer-motion"
-import { CalendarDays, X } from "lucide-react";
+import * as React from "react";
+import { AnimatePresence, motion } from "framer-motion";
+import { CalendarDays, ExternalLink, Globe, Sparkles, X } from "lucide-react";
 
-import { Badge } from "@/shared/components/ui/badge"
-import { Button } from "@/shared/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/components/ui/card"
-import { Skeleton } from "@/shared/components/ui/skeleton"
-import type { VaultLink } from "@/shared/services/supabase"
+import { Badge } from "@/shared/components/ui/badge";
+import { Button } from "@/shared/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/shared/components/ui/card";
+import { Skeleton } from "@/shared/components/ui/skeleton";
+import type { VaultLink } from "@/shared/services/supabase";
+import { fetchLinkPreview, getCachedPreviewSync } from "@/features/vault/services/previewCache";
 
 type LinkDetailsModalProps = {
-  link: VaultLink | null
-  onClose: () => void
-}
-
-type EnrichPayload = {
-  title: string | null
-  description: string | null
-  summary: string | null
-  image: string | null
-}
+  link: VaultLink | null;
+  onClose: () => void;
+};
 
 type LinkPreview = {
-  title: string | null
-  description: string | null
-  image: string | null
-}
+  title: string | null;
+  description: string | null;
+  image: string | null;
+};
 
 function getDomain(url: string) {
   try {
-    return new URL(url).hostname
+    return new URL(url).hostname.replace(/^www\./i, "");
   } catch {
-    return "example.com"
+    return "example.com";
   }
 }
 
 function formatDateTime(value: string | null) {
-  if (!value) return "Unknown date"
+  if (!value) return "Unknown date";
   return new Date(value).toLocaleString(undefined, {
     weekday: "short",
     year: "numeric",
@@ -45,250 +40,320 @@ function formatDateTime(value: string | null) {
     day: "numeric",
     hour: "2-digit",
     minute: "2-digit",
-  })
-}
-
-function EmbedPreviewCard({
-  label,
-  url,
-  preview,
-  isLoading,
-}: {
-  label: string
-  url: string
-  preview: LinkPreview | null
-  isLoading: boolean
-}) {
-  const domain = getDomain(url)
-  const title = preview?.title?.trim() || domain
-  const description = preview?.description?.trim() || "Open this link in a new tab."
-  const image = preview?.image?.trim() || null
-  const [imageLoading, setImageLoading] = React.useState(Boolean(image))
-  const [imageFailed, setImageFailed] = React.useState(false)
-
-  React.useEffect(() => {
-    setImageLoading(Boolean(image))
-    setImageFailed(false)
-  }, [image])
-
-  return (
-    <a
-      href={url}
-      target="_blank"
-      rel="noopener noreferrer"
-      className="group block cursor-pointer rounded-lg border border-border/80 bg-background/40 p-3 transition-colors hover:border-border hover:bg-background/60"
-    >
-      <p className="mb-2 text-[11px] tracking-wide text-muted-foreground uppercase">{label}</p>
-      <div className="flex items-start gap-3">
-        {isLoading ? (
-          <Skeleton className="size-12 shrink-0 rounded-md" />
-        ) : image && !imageFailed ? (
-          <div className="relative size-12 shrink-0">
-            {imageLoading && <Skeleton className="absolute inset-0 rounded-md" />}
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={image}
-              alt=""
-              className="size-12 rounded-md border border-border/80 object-cover"
-              loading="lazy"
-              onLoad={() => setImageLoading(false)}
-              onError={() => {
-                setImageFailed(true)
-                setImageLoading(false)
-              }}
-            />
-          </div>
-        ) : (
-          <div className="grid size-12 shrink-0 place-items-center rounded-md border border-border/80 bg-muted/60">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={`https://www.google.com/s2/favicons?domain=${domain}&sz=64`} alt="" className="size-5" />
-          </div>
-        )}
-        <div className="min-w-0">
-          <p className="line-clamp-2 text-sm font-medium text-foreground group-hover:text-primary">{title}</p>
-          <p className="mt-1 line-clamp-2 text-xs text-muted-foreground">{isLoading ? "Loading preview..." : description}</p>
-          <p className="mt-1 truncate text-[11px] text-muted-foreground">{domain}</p>
-        </div>
-      </div>
-    </a>
-  )
+  });
 }
 
 export function VaultDetailsModal({ link, onClose }: LinkDetailsModalProps) {
-  const [previewByUrl, setPreviewByUrl] = React.useState<Record<string, LinkPreview>>({})
-  const [loadingByUrl, setLoadingByUrl] = React.useState<Record<string, boolean>>({})
-  const [isModalSkeleton, setIsModalSkeleton] = React.useState(false)
+  const [targetPreview, setTargetPreview] = React.useState<LinkPreview | null>(() =>
+    link ? getCachedPreviewSync(link.url) : null,
+  );
+  const [sourcePreview, setSourcePreview] = React.useState<LinkPreview | null>(() =>
+    link?.source_url ? getCachedPreviewSync(link.source_url) : null,
+  );
+  const [loadingTarget, setLoadingTarget] = React.useState(false);
+  const [loadingSource, setLoadingSource] = React.useState(false);
 
+  const targetDomain = link ? getDomain(link.url) : "";
+  const hasSourceUrl = Boolean(link?.source_url);
+  const sourceDomain = hasSourceUrl && link?.source_url ? getDomain(link.source_url) : "";
+
+  // Reset states and fetch enrichment previews via global cache when link changes
   React.useEffect(() => {
-    if (!link) return
-    setIsModalSkeleton(true)
-    const timer = window.setTimeout(() => setIsModalSkeleton(false), 240)
-    return () => window.clearTimeout(timer)
-  }, [link])
+    if (!link) {
+      setTargetPreview(null);
+      setSourcePreview(null);
+      setLoadingTarget(false);
+      setLoadingSource(false);
+      return;
+    }
 
-  React.useEffect(() => {
-    if (!link) return
-    const urls = [link.url, link.source_url].filter((u): u is string => Boolean(u))
-    const uniqueUrls = [...new Set(urls)]
-    let isCancelled = false
+    // Initialize with cached preview if available
+    const cachedTarget = getCachedPreviewSync(link.url);
+    setTargetPreview(cachedTarget);
+    setLoadingTarget(!cachedTarget);
 
-    setLoadingByUrl((prev) => {
-      const next = { ...prev }
-      uniqueUrls.forEach((url) => {
-        next[url] = true
+    if (hasSourceUrl && link.source_url) {
+      const cachedSource = getCachedPreviewSync(link.source_url);
+      setSourcePreview(cachedSource);
+      setLoadingSource(!cachedSource);
+    } else {
+      setSourcePreview(null);
+      setLoadingSource(false);
+    }
+
+    let isSubscribed = true;
+
+    // Fetch Target Link Preview
+    fetchLinkPreview(link.url)
+      .then((data) => {
+        if (!isSubscribed) return;
+        setTargetPreview({
+          title: data.title,
+          description: data.description ?? data.summary,
+          image: data.image,
+        });
       })
-      return next
-    })
+      .catch(() => {})
+      .finally(() => {
+        if (isSubscribed) setLoadingTarget(false);
+      });
 
-    void Promise.all(
-      uniqueUrls.map(async (url) => {
-        try {
-          const response = await fetch("/api/enrich", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ url }),
-          })
-          const payload = (await response.json()) as EnrichPayload
-          return [
-            url,
-            {
-              title: payload.title,
-              description: payload.description ?? payload.summary,
-              image: payload.image,
-            } satisfies LinkPreview,
-          ] as const
-        } catch {
-          return [url, { title: null, description: null, image: null } satisfies LinkPreview] as const
-        }
-      })
-    ).then((entries) => {
-      if (isCancelled) return
-      setPreviewByUrl((prev) => ({ ...prev, ...Object.fromEntries(entries) }))
-      setLoadingByUrl((prev) => {
-        const next = { ...prev }
-        urls.forEach((url) => {
-          next[url] = false
+    // Fetch Source Link Preview if present
+    if (hasSourceUrl && link.source_url) {
+      fetchLinkPreview(link.source_url)
+        .then((data) => {
+          if (!isSubscribed) return;
+          setSourcePreview({
+            title: data.title,
+            description: data.description ?? data.summary,
+            image: data.image,
+          });
         })
-        return next
-      })
-    })
+        .catch(() => {})
+        .finally(() => {
+          if (isSubscribed) setLoadingSource(false);
+        });
+    }
 
     return () => {
-      isCancelled = true
-    }
-  }, [link])
+      isSubscribed = false;
+    };
+  }, [link, hasSourceUrl]);
+
+  const targetImage =
+    targetPreview?.image ||
+    (link?.youtube_id ? `https://img.youtube.com/vi/${link.youtube_id}/hqdefault.jpg` : null);
+
+  const handleModalClose = () => {
+    setTargetPreview(null);
+    setSourcePreview(null);
+    setLoadingTarget(false);
+    setLoadingSource(false);
+    onClose();
+  };
 
   return (
     <AnimatePresence>
       {link && (
         <motion.div
-          className="fixed inset-0 z-50 grid place-items-center bg-black/55 px-4 backdrop-blur-sm"
+          className="fixed inset-0 z-50 grid place-items-center bg-black/80 px-4 backdrop-blur-sm overflow-y-auto py-6"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          onClick={onClose}
+          onClick={handleModalClose}
         >
           <motion.div
-            initial={{ opacity: 0, y: 10, scale: 0.99 }}
+            initial={{ opacity: 0, y: 12, scale: 0.98 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 8, scale: 0.99 }}
-            transition={{ duration: 0.18, ease: "easeOut" }}
-            className="w-full max-w-2xl"
+            exit={{ opacity: 0, y: 8, scale: 0.98 }}
+            transition={{ duration: 0.16, ease: "easeOut" }}
+            className="w-full max-w-2xl h-auto max-h-[90vh] flex flex-col my-auto"
             onClick={(event) => event.stopPropagation()}
           >
-            <Card className="border-border/80 bg-card">
-              <CardHeader className="pb-3">
+            <Card className="border-[#262626] bg-[#141414] shadow-2xl overflow-hidden rounded-xl h-auto flex flex-col">
+              {/* Header - Renders Immediately */}
+              <CardHeader className="pb-3 px-6 pt-5 border-b border-[#262626] shrink-0">
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex min-w-0 items-start gap-3">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
-                      src={`https://www.google.com/s2/favicons?domain=${getDomain(link.url)}&sz=128`}
+                      src={`https://www.google.com/s2/favicons?domain=${targetDomain}&sz=128`}
                       alt=""
-                      className="mt-1 size-9 rounded-md border border-border/80 bg-background p-1"
+                      className="mt-0.5 size-9 rounded border border-[#262626] bg-[#0a0a0a] p-1 shrink-0"
                     />
                     <div className="min-w-0">
-                      <CardTitle className="text-balance text-lg sm:text-xl">
-                        {link.title}
-                      </CardTitle>
-                      <CardDescription className="mt-1 flex items-center gap-1">
-                        {/* <Globe className="size-3.5" /> */}
-                        {getDomain(link.url)}
-                      </CardDescription>
+                      <div className="flex items-center gap-2">
+                        <CardTitle className="text-balance text-base font-bold tracking-tight text-white">
+                          {link.title}
+                        </CardTitle>
+                      </div>
+                      <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-zinc-400">
+                        <span className="flex items-center gap-1 font-mono text-zinc-300">
+                          <Globe className="size-3 text-zinc-500" />
+                          {targetDomain}
+                        </span>
+                        <span>•</span>
+                        <Badge
+                          variant="outline"
+                          className="font-medium text-[10px] uppercase tracking-wider border-[#262626] bg-[#0a0a0a] text-zinc-300 px-2 py-0.5"
+                        >
+                          {link.category}
+                        </Badge>
+                        <span>•</span>
+                        <span className="flex items-center gap-1 text-zinc-500">
+                          <CalendarDays className="size-3" />
+                          {formatDateTime(link.created_at)}
+                        </span>
+                      </div>
                     </div>
                   </div>
                   <Button
-                    size="icon-sm"
+                    size="icon-xs"
                     variant="ghost"
-                    onClick={onClose}
+                    onClick={handleModalClose}
                     aria-label="Close details"
+                    className="rounded text-zinc-400 hover:bg-[#262626]"
                   >
-                    <X />
+                    <X className="size-4" />
                   </Button>
                 </div>
               </CardHeader>
 
-              <CardContent className="space-y-4">
-                {isModalSkeleton ? (
-                  <>
-                    <div className="flex items-center gap-2">
-                      <Skeleton className="h-5 w-24" />
-                      <Skeleton className="h-4 w-44" />
-                    </div>
-                    <Skeleton className="h-4 w-full" />
-                    <Skeleton className="h-4 w-10/12" />
-                    <div className="space-y-3">
-                      <Skeleton className="h-24 w-full rounded-lg" />
-                      <Skeleton className="h-24 w-full rounded-lg" />
-                    </div>
-                  </>
-                ) : (
-                  <>
-                    <div className="flex flex-wrap items-center gap-2">
-                      <Badge variant="outline" className="font-bold">{link.category}</Badge>
-                      <div className="ml-auto inline-flex items-center gap-1 text-xs text-muted-foreground">
-                        <CalendarDays className="size-3.5" />
-                        {formatDateTime(link.created_at)}
-                      </div>
-                    </div>
-
-                    <p className="text-sm leading-6 text-foreground/90">
-                      {link.summary || "No summary available yet."}
-                    </p>
-
-                    {link.youtube_id && (
-                      <div className="relative aspect-video w-full overflow-hidden rounded-xl border border-border/80 bg-muted/30 shadow-sm">
-                        <iframe
-                          src={`https://www.youtube.com/embed/${link.youtube_id}`}
-                          title="YouTube video player"
-                          frameBorder="0"
-                          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                          allowFullScreen
-                          className="absolute inset-0 h-full w-full"
-                        />
-                      </div>
-                    )}
-
-                    <div className="space-y-3">
-                      <EmbedPreviewCard
-                        label="URL"
-                        url={link.url}
-                        preview={previewByUrl[link.url] ?? null}
-                        isLoading={Boolean(loadingByUrl[link.url])}
+              {/* Scrollable Body */}
+              <CardContent className="space-y-4 px-6 py-5 overflow-y-auto flex-1">
+                {/* UNIFIED TARGET LINK CARD */}
+                <div className="overflow-hidden rounded-lg border border-[#262626] bg-[#0a0a0a]">
+                  {/* Top Cover Banner: SKELETON ONLY FOR IMAGE/VIDEO WHILE FETCHING */}
+                  {loadingTarget && !link.youtube_id && !targetImage ? (
+                    <Skeleton className="h-60 w-full rounded-t-lg bg-[#1c1c1c] animate-pulse" />
+                  ) : link.youtube_id ? (
+                    <div className="relative aspect-video w-full overflow-hidden bg-black border-b border-[#262626]">
+                      <iframe
+                        src={`https://www.youtube.com/embed/${link.youtube_id}`}
+                        title="YouTube video player"
+                        frameBorder="0"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                        allowFullScreen
+                        className="absolute inset-0 h-full w-full"
                       />
-                      {link.source_url && link.source_url !== link.url && (
-                        <EmbedPreviewCard
-                          label="Source"
-                          url={link.source_url}
-                          preview={previewByUrl[link.source_url] ?? null}
-                          isLoading={Boolean(loadingByUrl[link.source_url])}
-                        />
-                      )}
                     </div>
-                  </>
+                  ) : targetImage ? (
+                    <div className="relative max-h-96 w-full overflow-hidden bg-black border-b border-[#262626]">
+                      <img
+                        src={targetImage}
+                        alt=""
+                        className="h-full w-full object-cover opacity-90"
+                      />
+                      <div className="absolute top-2.5 left-2.5 flex items-center gap-1.5 rounded bg-black/80 border border-[#262626] px-2 py-0.5 text-[10px] font-mono text-white backdrop-blur-sm">
+                        <img
+                          src={`https://www.google.com/s2/favicons?domain=${targetDomain}&sz=32`}
+                          alt=""
+                          className="size-3"
+                        />
+                        <span>{targetDomain}</span>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="relative h-20 w-full overflow-hidden bg-[#0d0d0d] p-3 flex items-center justify-between border-b border-[#262626]">
+                      <div className="flex items-center gap-2.5">
+                        <div className="size-9 rounded-md border border-[#262626] bg-[#1a1a1a] grid place-items-center">
+                          <img
+                            src={`https://www.google.com/s2/favicons?domain=${targetDomain}&sz=64`}
+                            alt=""
+                            className="size-4.5"
+                          />
+                        </div>
+                        <div>
+                          <h4 className="text-xs font-semibold text-white truncate max-w-xs">
+                            {link.title}
+                          </h4>
+                          <p className="text-[10px] font-mono text-zinc-400 mt-0.5">
+                            {targetDomain}
+                          </p>
+                        </div>
+                      </div>
+                      <Badge
+                        variant="outline"
+                        className="font-semibold text-[10px] uppercase border-[#262626] bg-[#141414] text-zinc-300 px-2 py-0.5"
+                      >
+                        Target Link
+                      </Badge>
+                    </div>
+                  )}
+
+                  {/* Web Page Details & AI Summary - RENDERS IMMEDIATELY */}
+                  <div className="p-4 space-y-3">
+                    <div>
+                      <a
+                        href={link.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1.5 text-xs font-semibold text-white hover:underline transition-all"
+                      >
+                        <span>{targetPreview?.title || link.title}</span>
+                        <ExternalLink className="size-3.5 text-zinc-400 hover:text-white" />
+                      </a>
+                      <p className="mt-1 text-xs leading-relaxed text-zinc-400 font-normal">
+                        {targetPreview?.description ||
+                          link.summary ||
+                          `Web page resource on ${targetDomain}.`}
+                      </p>
+                      <p className="text-[10px] font-mono text-zinc-500 truncate pt-1">
+                        <a
+                          href={link.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="hover:underline hover:text-zinc-300"
+                        >
+                          {link.url}
+                        </a>
+                      </p>
+                    </div>
+
+                    {/* Directly Attached AI Key Summary - RENDERS IMMEDIATELY */}
+                    <div className="pt-3 border-t border-[#262626] space-y-1">
+                      <div className="flex items-center gap-1.5 text-xs font-semibold text-zinc-200">
+                        <span>Summary</span>
+                      </div>
+                      <p className="text-xs leading-relaxed text-zinc-300 font-normal">
+                        {link.summary || "No summary captured yet for this saved link."}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* UNIFIED REFERRER SOURCE CARD - TEXT RENDERS IMMEDIATELY */}
+                {hasSourceUrl && link.source_url && (
+                  <div className="rounded-lg border border-[#262626] bg-[#0a0a0a] p-4 space-y-2">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <img
+                          src={`https://www.google.com/s2/favicons?domain=${sourceDomain}&sz=32`}
+                          alt=""
+                          className="size-4 shrink-0 rounded-xs"
+                        />
+                        <span className="text-[10px] font-semibold text-zinc-400 uppercase tracking-wider">
+                          Referrer Source ({sourceDomain})
+                        </span>
+                      </div>
+                    </div>
+
+                    <div>
+                      <a
+                        href={link.source_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1.5 text-xs font-semibold text-white hover:underline transition-all"
+                      >
+                        <span>{sourcePreview?.title || `Referrer Link on ${sourceDomain}`}</span>
+                        <ExternalLink className="size-3 text-zinc-400 hover:text-white" />
+                      </a>
+                      <p className="mt-1 text-xs leading-relaxed text-zinc-400 font-normal">
+                        {sourcePreview?.description ||
+                          (loadingSource
+                            ? "Fetching source webpage metadata..."
+                            : `Source URL captured when saving target bookmark.`)}
+                      </p>
+                      <p className="text-[10px] font-mono text-zinc-500 truncate pt-1">
+                        <a
+                          href={link.source_url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="hover:underline hover:text-zinc-300"
+                        >
+                          {link.source_url}
+                        </a>
+                      </p>
+                    </div>
+                  </div>
                 )}
 
-                <div className="flex items-center justify-end border-t border-border/80 pt-3">
-                  <Button variant="ghost" onClick={onClose}>
+                {/* Footer Actions */}
+                <div className="flex items-center justify-end border-t border-[#262626] pt-3 mt-2">
+                  <Button
+                    variant="ghost"
+                    onClick={handleModalClose}
+                    className="font-semibold text-xs rounded-md text-zinc-400 hover:bg-[#262626]"
+                  >
                     Close
                   </Button>
                 </div>

@@ -3,18 +3,23 @@
 
 import * as React from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { ExternalLink, MoreHorizontal, Pencil, Trash2, Youtube } from "lucide-react";
+import {
+  Check,
+  Copy,
+  ExternalLink,
+  Globe,
+  MoreHorizontal,
+  Pencil,
+  Play,
+  Trash2,
+  Youtube,
+} from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
 import { Badge } from "@/shared/components/ui/badge";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/shared/components/ui/card";
+import { Card, CardContent } from "@/shared/components/ui/card";
 import { cn } from "@/shared/utils/utils";
 import type { VaultLink } from "@/shared/services/supabase";
+import { fetchLinkPreview, getCachedPreviewSync } from "@/features/vault/services/previewCache";
 
 type VaultCardProps = {
   link: VaultLink;
@@ -27,20 +32,9 @@ type VaultCardProps = {
 
 function getDomain(url: string) {
   try {
-    return new URL(url).hostname;
+    return new URL(url).hostname.replace(/^www\./i, "");
   } catch {
     return "example.com";
-  }
-}
-
-function getDisplaySourceUrl(url: string) {
-  try {
-    const parsed = new URL(url);
-    const host = parsed.hostname.replace(/^www\./i, "");
-    const rest = `${parsed.pathname}${parsed.search}${parsed.hash}`;
-    return `${host}${rest}`.replace(/\/$/, "") || host;
-  } catch {
-    return url.replace(/^https?:\/\/(www\.)?/i, "");
   }
 }
 
@@ -52,11 +46,44 @@ export function VaultCard({
   onEdit,
   onDelete,
 }: VaultCardProps) {
-  const isSourceValid = link.source_url && link.source_url !== link.url;
+  const [copied, setCopied] = React.useState(false);
+  const [ogImage, setOgImage] = React.useState<string | null>(
+    () => getCachedPreviewSync(link.url)?.image || null,
+  );
+  const [imageFailed, setImageFailed] = React.useState(false);
+  const domain = getDomain(link.url);
+
+  // Auto-enrich fetch with global cache for cover image
+  React.useEffect(() => {
+    if (link.youtube_id) return;
+    let isMounted = true;
+    fetchLinkPreview(link.url)
+      .then((data) => {
+        if (isMounted && data?.image) {
+          setOgImage(data.image);
+        }
+      })
+      .catch(() => {});
+    return () => {
+      isMounted = false;
+    };
+  }, [link.url, link.youtube_id]);
+
+  const handleCopy = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    navigator.clipboard.writeText(link.url);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 1800);
+  };
+
+  const hasYouTube = Boolean(link.youtube_id);
+  const coverUrl = hasYouTube
+    ? `https://img.youtube.com/vi/${link.youtube_id}/hqdefault.jpg`
+    : ogImage;
 
   return (
     <Card
-      className="group flex h-full cursor-pointer flex-col overflow-hidden border-border/80 bg-card/80 transition-all hover:border-border hover:shadow-lg hover:shadow-black/5"
+      className="border text-card-foreground group relative flex h-full cursor-pointer flex-col justify-end overflow-hidden border-[#262626] bg-[#141414] transition-colors hover:border-zinc-500/50 rounded-lg shadow-sm"
       onClick={onOpenDetails}
       role="button"
       tabIndex={0}
@@ -67,131 +94,166 @@ export function VaultCard({
         }
       }}
     >
-      <CardHeader className="pb-2.5">
-        <div className="flex items-start justify-between gap-3">
-          <div className="flex min-w-0 items-center gap-3">
-            <div className="relative shrink-0">
-              {link.youtube_id ? (
-                <div className="flex size-8 items-center justify-center rounded-lg border border-red-500/30 bg-red-500/10 shadow-sm transition-colors group-hover:bg-red-500/20">
-                  <Youtube className="size-4 text-red-500" />
-                </div>
-              ) : (
-                <img
-                  src={`https://www.google.com/s2/favicons?domain=${getDomain(link.url)}&sz=64`}
-                  alt=""
-                  className="size-8 rounded-lg border border-border/80 bg-background p-1.5 shadow-sm"
-                />
-              )}
-            </div>
-            <div className="min-w-0">
-              <CardTitle className="truncate text-[15px] leading-tight font-bold tracking-tight group-hover:text-primary transition-colors">
-                {link.title}
-              </CardTitle>
-              <div className="mt-1 flex flex-wrap items-center gap-1.5">
-                <Badge variant="outline" className="h-4 px-1.5 text-[9px] font-bold uppercase tracking-wider bg-background/50">
-                  {link.category}
-                </Badge>
+      {/* Target Link Cover Banner - Uniform h-40 overflow-hidden box for perfect grid alignment */}
+      {coverUrl && !imageFailed ? (
+        <div className="relative max-h-60 w-full overflow-hidden bg-black border-b border-[#262626] shrink-0">
+          <img
+            src={coverUrl}
+            alt=""
+            className="h-full w-full object-cover opacity-90 transition-transform duration-300 group-hover:scale-102"
+            onError={() => setImageFailed(true)}
+          />
+          {hasYouTube ? (
+            <>
+              <div className="absolute top-2.5 left-2.5 flex items-center gap-1 rounded bg-red-600 px-2 py-0.5 text-[10px] font-semibold text-white">
+                <Youtube className="size-3" />
+                <span>YouTube</span>
               </div>
+              <div className="absolute inset-0 grid place-items-center">
+                <div className="grid size-10 place-items-center rounded-full bg-red-600 text-white shadow-md">
+                  <Play className="size-4 fill-white ml-0.5" />
+                </div>
+              </div>
+            </>
+          ) : (
+            <div className="absolute top-2.5 left-2.5 flex items-center gap-1.5 rounded bg-black/80 border border-[#262626] px-2 py-0.5 text-[10px] font-mono text-zinc-300 backdrop-blur-sm">
+              <img
+                src={`https://www.google.com/s2/favicons?domain=${domain}&sz=32`}
+                alt=""
+                className="size-3 rounded-xs"
+              />
+              <span>{domain}</span>
+            </div>
+          )}
+        </div>
+      ) : (
+        /* Uniform h-40 fallback banner for non-preview / failed image links */
+        <div className="relative max-h-60 w-full overflow-hidden bg-[#0d0d0d] p-4 flex flex-col items-center justify-center border-b border-[#262626] shrink-0">
+          <div className="flex flex-col items-center justify-center gap-2">
+            <div className="size-10 rounded-md border border-[#262626] bg-[#1a1a1a] grid place-items-center shadow-inner">
+              <img
+                src={`https://www.google.com/s2/favicons?domain=${domain}&sz=64`}
+                alt=""
+                className="size-5"
+              />
+            </div>
+            <p className="text-xs font-mono font-semibold text-zinc-300">{domain}</p>
+          </div>
+        </div>
+      )}
+
+      {/* Main Card Content */}
+      <CardContent className="flex flex-1 flex-col justify-end p-4 gap-2.5">
+        <div className="space-y-2.5">
+          <div className="flex items-start justify-between gap-2">
+            <h3 className="line-clamp-2 text-sm font-semibold text-white leading-snug group-hover:text-zinc-200 transition-colors flex-1 min-w-0">
+              {link.title}
+            </h3>
+
+            <div className="relative shrink-0" data-link-menu>
+              <Button
+                size="icon-xs"
+                variant="ghost"
+                onClick={(event) => {
+                  event.stopPropagation();
+                  onToggleMenu();
+                }}
+                aria-label="Link options"
+                className={cn(
+                  "rounded transition-all hover:bg-[#262626]",
+                  isMenuOpen ? "opacity-100 bg-[#262626]" : "opacity-50 group-hover:opacity-100",
+                )}
+              >
+                <MoreHorizontal className="size-4" />
+              </Button>
+              <AnimatePresence>
+                {isMenuOpen && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -4, scale: 0.98 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: -4, scale: 0.98 }}
+                    className="absolute top-7 right-0 z-30 w-32 rounded-md border border-[#262626] bg-[#141414] p-1 shadow-xl"
+                  >
+                    <button
+                      type="button"
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        onEdit();
+                      }}
+                      className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-xs font-medium hover:bg-[#262626] transition-colors text-zinc-200"
+                    >
+                      <Pencil className="size-3.5 opacity-70" />
+                      Edit
+                    </button>
+                    <button
+                      type="button"
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        onDelete();
+                      }}
+                      className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-xs font-medium text-red-400 hover:bg-red-500/10 transition-colors"
+                    >
+                      <Trash2 className="size-3.5 opacity-70" />
+                      Delete
+                    </button>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
           </div>
 
-          <div className="relative shrink-0" data-link-menu>
+          {/* Category Pill */}
+          <div>
+            <Badge
+              variant="outline"
+              className="h-4.5 px-1.5 text-[9px] font-medium uppercase tracking-wider bg-[#0a0a0a] border-[#262626] text-zinc-300"
+            >
+              {link.category}
+            </Badge>
+          </div>
+
+          {/* Expanded Summary Snippet */}
+          <p className="line-clamp-3 text-xs leading-relaxed font-normal text-zinc-400">
+            {link.summary || "No summary captured yet. Click to view details or enrich metadata."}
+          </p>
+        </div>
+
+        {/* Footer Actions Anchored at Bottom */}
+        <div className="mt-auto pt-3 border-t border-[#262626] flex items-center justify-between gap-2">
+          <div className="flex items-center gap-1.5 text-[10px] text-zinc-500 font-mono">
+            <Globe className="size-3 text-zinc-500" />
+            <span className="truncate max-w-35">{domain}</span>
+          </div>
+
+          <div className="flex items-center gap-1">
             <Button
               size="icon-xs"
               variant="ghost"
-              onClick={(event) => {
-                event.stopPropagation();
-                onToggleMenu();
-              }}
-              aria-label="Link options"
-              className={cn(
-                "transition-all hover:bg-muted/80",
-                isMenuOpen ? "opacity-100" : "opacity-40 group-hover:opacity-100 focus:opacity-100"
-              )}
+              onClick={handleCopy}
+              title="Copy URL"
+              className="rounded text-zinc-400 hover:text-white hover:bg-[#262626]"
             >
-              <MoreHorizontal className="size-4" />
+              {copied ? <Check className="size-3 text-emerald-400" /> : <Copy className="size-3" />}
             </Button>
-            <AnimatePresence>
-              {isMenuOpen && (
-                <motion.div
-                  initial={{ opacity: 0, y: -4, scale: 0.98 }}
-                  animate={{ opacity: 1, y: 0, scale: 1 }}
-                  exit={{ opacity: 0, y: -4, scale: 0.98 }}
-                  className="absolute top-9 right-0 z-30 w-36 rounded-xl border border-border bg-popover/90 p-1.5 shadow-2xl backdrop-blur-md"
-                >
-                  <button
-                    type="button"
-                    onClick={(event) => {
-                      event.stopPropagation();
-                      onEdit();
-                    }}
-                    className="flex w-full cursor-pointer items-center gap-2.5 rounded-lg px-2.5 py-2 text-left text-[13px] font-medium hover:bg-accent transition-colors"
-                  >
-                    <Pencil className="size-3.5 opacity-70" />
-                    Edit
-                  </button>
-                  <button
-                    type="button"
-                    onClick={(event) => {
-                      event.stopPropagation();
-                      onDelete();
-                    }}
-                    className="flex w-full cursor-pointer items-center gap-2.5 rounded-lg px-2.5 py-2 text-left text-[13px] font-medium text-destructive hover:bg-destructive/10 transition-colors"
-                  >
-                    <Trash2 className="size-3.5 opacity-70" />
-                    Delete
-                  </button>
-                </motion.div>
-              )}
-            </AnimatePresence>
+
+            <Button
+              asChild
+              size="icon-xs"
+              variant="outline"
+              className="rounded border-[#262626] bg-[#0a0a0a] hover:bg-white hover:text-black hover:border-white transition-colors"
+            >
+              <a
+                href={link.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Open target link"
+                title="Open target link"
+                onClick={(event) => event.stopPropagation()}
+              >
+                <ExternalLink className="size-3" />
+              </a>
+            </Button>
           </div>
-        </div>
-      </CardHeader>
-
-      <CardContent className="flex flex-1 flex-col gap-4">
-        <p className="line-clamp-3 text-[13.5px] leading-relaxed font-medium text-muted-foreground/80">
-          {link.summary || "No summary captured yet. Review and add insights to this link."}
-        </p>
-
-        <div className="mt-auto flex items-center justify-between gap-3">
-          {isSourceValid ? (
-            <a
-              href={link.source_url!}
-              target="_blank"
-              rel="noopener noreferrer"
-              onClick={(event) => event.stopPropagation()}
-              className="group/source flex min-w-0 items-center gap-2 rounded-full border border-border/40 bg-muted/20 px-2.5 py-1.5 text-[10px] font-semibold text-muted-foreground transition-all hover:border-border/80 hover:bg-muted/40 hover:text-foreground"
-            >
-              <img
-                src={`https://www.google.com/s2/favicons?domain=${getDomain(link.source_url!)}&sz=32`}
-                alt=""
-                className="size-3.5 shrink-0 rounded-sm opacity-70 transition-opacity group-hover/source:opacity-100"
-              />
-              <span className="truncate">{getDisplaySourceUrl(link.source_url!)}</span>
-            </a>
-          ) : (
-            <div className="flex min-w-0 items-center gap-2 rounded-full border border-border/40 bg-muted/10 px-2.5 py-1.5 text-[10px] font-semibold text-muted-foreground/50">
-              <span className="truncate italic">No source specified</span>
-            </div>
-          )}
-
-          <Button
-            asChild
-            size="icon-xs"
-            variant="outline"
-            className="shrink-0 rounded-full border-border/40 bg-background/50 transition-all hover:bg-primary hover:text-primary-foreground hover:border-primary hover:shadow-lg hover:shadow-primary/20"
-          >
-            <a
-              href={link.url}
-              target="_blank"
-              rel="noopener noreferrer"
-              aria-label="Open link"
-              title="Open link"
-              onClick={(event) => event.stopPropagation()}
-            >
-              <ExternalLink className="size-3.5" />
-            </a>
-          </Button>
         </div>
       </CardContent>
     </Card>

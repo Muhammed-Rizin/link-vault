@@ -12,27 +12,24 @@ interface LandingHeaderProps {
 
 export function LandingHeader({ isLoggedIn, onOpenLogin, onOpenSignup }: LandingHeaderProps) {
   return (
-    <nav className="fixed top-0 z-50 w-full border-b border-white/5 bg-[#050505]/80 backdrop-blur-xl">
-      <div className="container mx-auto flex h-20 items-center justify-between px-6 sm:px-10">
-        <Logo iconClassName="size-9" />
-        <div className="hidden md:flex items-center gap-8 text-sm font-medium text-muted-foreground">
-          {/* Nav links removed as requested */}
-        </div>
-        <div className="flex items-center gap-4">
+    <nav className="fixed top-0 z-50 w-full border-b border-[#262626] bg-[#0a0a0a]">
+      <div className="container mx-auto flex h-16 items-center justify-between px-6 sm:px-10">
+        <Logo iconClassName="size-8" />
+        <div className="flex items-center gap-3">
           {!isLoggedIn && (
             <Button
               variant="ghost"
-              className="hidden sm:inline-flex text-white/70 hover:text-white font-bold text-sm tracking-tight"
+              className="hidden sm:inline-flex text-zinc-400 hover:text-white font-medium text-xs rounded-md"
               onClick={onOpenLogin}
             >
-              Login
+              Sign in
             </Button>
           )}
           <Button
-            className="rounded-full px-8 h-11 font-black shadow-lg shadow-primary/20 tracking-tighter"
+            className="rounded-md px-4 h-9 font-semibold text-xs bg-white text-black hover:bg-zinc-200 transition-colors"
             onClick={() => (isLoggedIn ? (window.location.href = "/links") : onOpenSignup())}
           >
-            {isLoggedIn ? "Dashboard" : "Get Started"}
+            {isLoggedIn ? "Vault dashboard" : "Get started free"}
           </Button>
         </div>
       </div>
