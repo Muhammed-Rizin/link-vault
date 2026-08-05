@@ -61,7 +61,10 @@ function getEmbedUrl(url: string): string | null {
     }
 
     // Figma designs
-    if (hostname.includes("figma.com") && (pathname.includes("/design/") || pathname.includes("/file/"))) {
+    if (
+      hostname.includes("figma.com") &&
+      (pathname.includes("/design/") || pathname.includes("/file/"))
+    ) {
       return `https://www.figma.com/embed?embed_host=share&url=${encodeURIComponent(url)}`;
     }
   } catch {
@@ -72,7 +75,7 @@ function getEmbedUrl(url: string): string | null {
 
 export function VaultLinkCover({ link, layout, className }: VaultLinkCoverProps) {
   const [ogImage, setOgImage] = React.useState<string | null>(
-    () => getCachedPreviewSync(link.url)?.image || null
+    () => getCachedPreviewSync(link.url)?.image || null,
   );
   const [imageFailed, setImageFailed] = React.useState(false);
   const [loading, setLoading] = React.useState(false);
@@ -88,7 +91,7 @@ export function VaultLinkCover({ link, layout, className }: VaultLinkCoverProps)
   // Auto-enrich fetch with global cache for preview cover
   React.useEffect(() => {
     setImageFailed(false);
-    
+
     // Check cache
     const cached = getCachedPreviewSync(link.url);
     if (cached) {
@@ -124,7 +127,12 @@ export function VaultLinkCover({ link, layout, className }: VaultLinkCoverProps)
   if (layout === "grid") {
     if (coverUrl && !imageFailed) {
       return (
-        <div className={cn("relative max-h-60 w-full overflow-hidden bg-black border-b border-[#262626] shrink-0", className)}>
+        <div
+          className={cn(
+            "relative max-h-60 w-full overflow-hidden bg-black border-b border-[#262626] shrink-0",
+            className,
+          )}
+        >
           <img
             src={coverUrl}
             alt=""
@@ -150,7 +158,9 @@ export function VaultLinkCover({ link, layout, className }: VaultLinkCoverProps)
                 src={`https://www.google.com/s2/favicons?domain=${domain}&sz=32`}
                 alt=""
                 className="size-3 rounded-xs"
-                onError={(e) => { (e.target as HTMLElement).style.display = "none"; }}
+                onError={(e) => {
+                  (e.target as HTMLElement).style.display = "none";
+                }}
               />
               <span>{domain}</span>
             </div>
@@ -166,7 +176,12 @@ export function VaultLinkCover({ link, layout, className }: VaultLinkCoverProps)
   if (layout === "list") {
     if (coverUrl && !imageFailed) {
       return (
-        <div className={cn("shrink-0 overflow-hidden rounded-md border border-[#262626] bg-[#0a0a0a] flex items-center justify-center size-10", className)}>
+        <div
+          className={cn(
+            "shrink-0 overflow-hidden rounded-md border border-[#262626] bg-[#0a0a0a] flex items-center justify-center size-10",
+            className,
+          )}
+        >
           <img
             src={coverUrl}
             alt=""
@@ -179,12 +194,19 @@ export function VaultLinkCover({ link, layout, className }: VaultLinkCoverProps)
     }
 
     return (
-      <div className={cn("shrink-0 overflow-hidden rounded-md border border-[#262626] bg-[#0a0a0a] flex items-center justify-center size-10", className)}>
+      <div
+        className={cn(
+          "shrink-0 overflow-hidden rounded-md border border-[#262626] bg-[#0a0a0a] flex items-center justify-center size-10",
+          className,
+        )}
+      >
         <img
           src={`https://www.google.com/s2/favicons?domain=${domain}&sz=64`}
           alt=""
           className="size-5 object-contain"
-          onError={(e) => { (e.target as HTMLElement).style.display = "none"; }}
+          onError={(e) => {
+            (e.target as HTMLElement).style.display = "none";
+          }}
         />
       </div>
     );
@@ -193,12 +215,21 @@ export function VaultLinkCover({ link, layout, className }: VaultLinkCoverProps)
   // Layout 3: Details Modal Cover (interactive iframes or banners)
   if (layout === "detail") {
     if (loading && !hasYouTube && !embedUrl && !coverUrl) {
-      return <Skeleton className={cn("h-60 w-full rounded-t-lg bg-[#1c1c1c] animate-pulse", className)} />;
+      return (
+        <Skeleton
+          className={cn("h-60 w-full rounded-t-lg bg-[#1c1c1c] animate-pulse", className)}
+        />
+      );
     }
 
     if (hasYouTube) {
       return (
-        <div className={cn("relative aspect-video w-full overflow-hidden bg-black border-b border-[#262626]", className)}>
+        <div
+          className={cn(
+            "relative h-70 sm:h-95 md:aspect-video w-full overflow-hidden bg-black border-b border-[#262626]",
+            className,
+          )}
+        >
           <iframe
             src={`https://www.youtube.com/embed/${link.youtube_id}`}
             title="YouTube video player"
@@ -213,7 +244,12 @@ export function VaultLinkCover({ link, layout, className }: VaultLinkCoverProps)
 
     if (embedUrl) {
       return (
-        <div className={cn("relative aspect-video w-full overflow-hidden bg-black border-b border-[#262626]", className)}>
+        <div
+          className={cn(
+            "relative h-70 sm:h-95 md:aspect-video w-full overflow-hidden bg-black border-b border-[#262626]",
+            className,
+          )}
+        >
           <iframe
             src={embedUrl}
             title="Interactive Embed Preview"
@@ -229,7 +265,12 @@ export function VaultLinkCover({ link, layout, className }: VaultLinkCoverProps)
 
     if (coverUrl && !imageFailed) {
       return (
-        <div className={cn("relative max-h-96 w-full overflow-hidden bg-black border-b border-[#262626]", className)}>
+        <div
+          className={cn(
+            "relative h-48 sm:h-64 md:h-80 w-full overflow-hidden bg-black border-b border-[#262626]",
+            className,
+          )}
+        >
           <img
             src={coverUrl}
             alt=""
@@ -242,7 +283,9 @@ export function VaultLinkCover({ link, layout, className }: VaultLinkCoverProps)
               src={`https://www.google.com/s2/favicons?domain=${domain}&sz=32`}
               alt=""
               className="size-3"
-              onError={(e) => { (e.target as HTMLElement).style.display = "none"; }}
+              onError={(e) => {
+                (e.target as HTMLElement).style.display = "none";
+              }}
             />
             <span>{domain}</span>
           </div>

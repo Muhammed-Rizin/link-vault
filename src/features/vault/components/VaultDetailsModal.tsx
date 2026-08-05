@@ -104,7 +104,7 @@ export function VaultDetailsModal({ link, onClose }: LinkDetailsModalProps) {
     <AnimatePresence>
       {link && (
         <motion.div
-          className="fixed inset-0 z-50 grid place-items-center bg-black/80 px-4 backdrop-blur-sm overflow-y-auto py-6"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-3 sm:p-4 backdrop-blur-sm"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
@@ -115,12 +115,12 @@ export function VaultDetailsModal({ link, onClose }: LinkDetailsModalProps) {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 8, scale: 0.98 }}
             transition={{ duration: 0.16, ease: "easeOut" }}
-            className="w-full max-w-2xl h-auto max-h-[90vh] flex flex-col my-auto"
+            className="relative w-full max-w-2xl max-h-[92vh] sm:max-h-[90vh] flex flex-col"
             onClick={(event) => event.stopPropagation()}
           >
-            <Card className="border-[#262626] bg-[#141414] shadow-2xl overflow-hidden rounded-xl h-auto flex flex-col">
+            <Card className="border-[#262626] bg-[#141414] shadow-2xl overflow-hidden rounded-xl flex flex-col max-h-full">
               {/* Header - Renders Immediately */}
-              <CardHeader className="pb-3 px-6 pt-5 border-b border-[#262626] shrink-0">
+              <CardHeader className="pb-3 px-4 sm:px-6 pt-4 sm:pt-5 border-b border-[#262626] shrink-0">
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex min-w-0 items-start gap-3">
                     <img
@@ -130,7 +130,7 @@ export function VaultDetailsModal({ link, onClose }: LinkDetailsModalProps) {
                     />
                     <div className="min-w-0">
                       <div className="flex items-center gap-2">
-                        <CardTitle className="text-balance text-base font-bold tracking-tight text-white">
+                        <CardTitle className="text-balance text-base font-bold tracking-tight text-white break-words">
                           {link.title}
                         </CardTitle>
                       </div>
@@ -167,7 +167,7 @@ export function VaultDetailsModal({ link, onClose }: LinkDetailsModalProps) {
               </CardHeader>
 
               {/* Scrollable Body */}
-              <CardContent className="space-y-4 px-6 py-5 overflow-y-auto flex-1">
+              <CardContent className="space-y-4 px-4 sm:px-6 py-4 sm:py-5 overflow-y-auto flex-1">
                 {/* UNIFIED TARGET LINK CARD */}
                 <div className="overflow-hidden rounded-lg border border-[#262626] bg-[#0a0a0a]">
                   <VaultLinkCover link={link} layout="detail" />
@@ -175,15 +175,17 @@ export function VaultDetailsModal({ link, onClose }: LinkDetailsModalProps) {
                   {/* Web Page Details & AI Summary - RENDERS IMMEDIATELY */}
                   <div className="p-4 space-y-3">
                     <div>
-                      <a
-                        href={link.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center gap-1.5 text-xs font-semibold text-white hover:underline transition-all"
-                      >
-                        <span>{link.title}</span>
-                        <ExternalLink className="size-3.5 text-zinc-400 hover:text-white" />
-                      </a>
+                      <div className="flex items-start gap-1.5">
+                        <a
+                          href={link.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-xs font-semibold text-white hover:underline transition-all break-words"
+                        >
+                          {link.title}
+                        </a>
+                        <ExternalLink className="size-3.5 text-zinc-400 hover:text-white shrink-0 mt-0.5" />
+                      </div>
                       <p className="mt-1 text-xs leading-relaxed text-zinc-400 font-normal">
                         {link.summary || `Web page resource on ${targetDomain}.`}
                       </p>
@@ -221,22 +223,24 @@ export function VaultDetailsModal({ link, onClose }: LinkDetailsModalProps) {
                           alt=""
                           className="size-4 shrink-0 rounded-xs"
                         />
-                        <span className="text-[10px] font-semibold text-zinc-400 uppercase tracking-wider">
+                        <span className="text-[10px] font-semibold text-zinc-400 uppercase tracking-wider truncate max-w-[150px] sm:max-w-none">
                           Referrer Source ({sourceDomain})
                         </span>
                       </div>
                     </div>
 
                     <div>
-                      <a
-                        href={link.source_url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center gap-1.5 text-xs font-semibold text-white hover:underline transition-all"
-                      >
-                        <span>{sourcePreview?.title || `Referrer Link on ${sourceDomain}`}</span>
-                        <ExternalLink className="size-3 text-zinc-400 hover:text-white" />
-                      </a>
+                      <div className="flex items-start gap-1.5">
+                        <a
+                          href={link.source_url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-xs font-semibold text-white hover:underline transition-all break-words"
+                        >
+                          {sourcePreview?.title || `Referrer Link on ${sourceDomain}`}
+                        </a>
+                        <ExternalLink className="size-3 text-zinc-400 hover:text-white shrink-0 mt-0.5" />
+                      </div>
                       <p className="mt-1 text-xs leading-relaxed text-zinc-400 font-normal">
                         {sourcePreview?.description ||
                           (loadingSource
