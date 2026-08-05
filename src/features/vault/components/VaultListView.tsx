@@ -9,6 +9,7 @@ import { Badge } from "@/shared/components/ui/badge";
 import { Button } from "@/shared/components/ui/button";
 import { cn } from "@/shared/utils/utils";
 import type { VaultLink } from "@/shared/services/supabase";
+import { VaultLinkCover } from "./VaultLinkCover";
 
 interface SortableVaultRowProps {
   link: VaultLink;
@@ -47,11 +48,6 @@ export function SortableVaultRow({
   };
 
   const domain = getDomain(link.url);
-  const [imageFailed, setImageFailed] = React.useState(false);
-
-  const coverImage = link.youtube_id
-    ? `https://img.youtube.com/vi/${link.youtube_id}/hqdefault.jpg`
-    : null;
 
   return (
     <div
@@ -87,24 +83,7 @@ export function SortableVaultRow({
         }}
       >
         {/* Constrained Thumbnail Preview Container */}
-        <div className="shrink-0 overflow-hidden rounded-md border border-[#262626] bg-[#0a0a0a] flex items-center justify-center size-10">
-          {coverImage && !imageFailed ? (
-            /* eslint-disable-next-line @next/next/no-img-element */
-            <img
-              src={coverImage}
-              alt=""
-              className="size-full object-cover opacity-90 transition-transform duration-200 group-hover:scale-105"
-              onError={() => setImageFailed(true)}
-            />
-          ) : (
-            /* eslint-disable-next-line @next/next/no-img-element */
-            <img
-              src={`https://www.google.com/s2/favicons?domain=${domain}&sz=64`}
-              alt=""
-              className="size-5 object-contain"
-            />
-          )}
-        </div>
+        <VaultLinkCover link={link} layout="list" />
 
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2">

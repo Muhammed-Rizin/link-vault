@@ -10,16 +10,14 @@ import {
   Globe,
   MoreHorizontal,
   Pencil,
-  Play,
   Trash2,
-  Youtube,
 } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
 import { Badge } from "@/shared/components/ui/badge";
 import { Card, CardContent } from "@/shared/components/ui/card";
 import { cn } from "@/shared/utils/utils";
 import type { VaultLink } from "@/shared/services/supabase";
-import { fetchLinkPreview, getCachedPreviewSync } from "@/features/vault/services/previewCache";
+import { VaultLinkCover } from "./VaultLinkCover";
 
 type VaultCardProps = {
   link: VaultLink;
@@ -47,27 +45,7 @@ export function VaultCard({
   onDelete,
 }: VaultCardProps) {
   const [copied, setCopied] = React.useState(false);
-  const [ogImage, setOgImage] = React.useState<string | null>(
-    () => getCachedPreviewSync(link.url)?.image || null,
-  );
-  const [imageFailed, setImageFailed] = React.useState(false);
   const domain = getDomain(link.url);
-
-  // Auto-enrich fetch with global cache for cover image
-  React.useEffect(() => {
-    if (link.youtube_id) return;
-    let isMounted = true;
-    fetchLinkPreview(link.url)
-      .then((data) => {
-        if (isMounted && data?.image) {
-          setOgImage(data.image);
-        }
-      })
-      .catch(() => {});
-    return () => {
-      isMounted = false;
-    };
-  }, [link.url, link.youtube_id]);
 
   const handleCopy = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -75,11 +53,6 @@ export function VaultCard({
     setCopied(true);
     setTimeout(() => setCopied(false), 1800);
   };
-
-  const hasYouTube = Boolean(link.youtube_id);
-  const coverUrl = hasYouTube
-    ? `https://img.youtube.com/vi/${link.youtube_id}/hqdefault.jpg`
-    : ogImage;
 
   return (
     <Card
@@ -94,53 +67,7 @@ export function VaultCard({
         }
       }}
     >
-      {/* Target Link Cover Banner - Uniform h-40 overflow-hidden box for perfect grid alignment */}
-      {coverUrl && !imageFailed ? (
-        <div className="relative max-h-60 w-full overflow-hidden bg-black border-b border-[#262626] shrink-0">
-          <img
-            src={coverUrl}
-            alt=""
-            className="h-full w-full object-cover opacity-90 transition-transform duration-300 group-hover:scale-102"
-            onError={() => setImageFailed(true)}
-          />
-          {hasYouTube ? (
-            <>
-              <div className="absolute top-2.5 left-2.5 flex items-center gap-1 rounded bg-red-600 px-2 py-0.5 text-[10px] font-semibold text-white">
-                <Youtube className="size-3" />
-                <span>YouTube</span>
-              </div>
-              <div className="absolute inset-0 grid place-items-center">
-                <div className="grid size-10 place-items-center rounded-full bg-red-600 text-white shadow-md">
-                  <Play className="size-4 fill-white ml-0.5" />
-                </div>
-              </div>
-            </>
-          ) : (
-            <div className="absolute top-2.5 left-2.5 flex items-center gap-1.5 rounded bg-black/80 border border-[#262626] px-2 py-0.5 text-[10px] font-mono text-zinc-300 backdrop-blur-sm">
-              <img
-                src={`https://www.google.com/s2/favicons?domain=${domain}&sz=32`}
-                alt=""
-                className="size-3 rounded-xs"
-              />
-              <span>{domain}</span>
-            </div>
-          )}
-        </div>
-      ) : (
-        /* Uniform h-40 fallback banner for non-preview / failed image links */
-        <div className="relative max-h-60 w-full overflow-hidden bg-[#0d0d0d] p-4 flex flex-col items-center justify-center border-b border-[#262626] shrink-0">
-          <div className="flex flex-col items-center justify-center gap-2">
-            <div className="size-10 rounded-md border border-[#262626] bg-[#1a1a1a] grid place-items-center shadow-inner">
-              <img
-                src={`https://www.google.com/s2/favicons?domain=${domain}&sz=64`}
-                alt=""
-                className="size-5"
-              />
-            </div>
-            <p className="text-xs font-mono font-semibold text-zinc-300">{domain}</p>
-          </div>
-        </div>
-      )}
+      <VaultLinkCover link={link} layout="grid" />
 
       {/* Main Card Content */}
       <CardContent className="flex flex-1 flex-col justify-end p-4 gap-2.5">

@@ -3,14 +3,14 @@
 
 import * as React from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { CalendarDays, ExternalLink, Globe, Sparkles, X } from "lucide-react";
+import { CalendarDays, ExternalLink, Globe, X } from "lucide-react";
 
 import { Badge } from "@/shared/components/ui/badge";
 import { Button } from "@/shared/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/shared/components/ui/card";
-import { Skeleton } from "@/shared/components/ui/skeleton";
 import type { VaultLink } from "@/shared/services/supabase";
 import { fetchLinkPreview, getCachedPreviewSync } from "@/features/vault/services/previewCache";
+import { VaultLinkCover } from "./VaultLinkCover";
 
 type LinkDetailsModalProps = {
   link: VaultLink | null;
@@ -44,33 +44,22 @@ function formatDateTime(value: string | null) {
 }
 
 export function VaultDetailsModal({ link, onClose }: LinkDetailsModalProps) {
-  const [targetPreview, setTargetPreview] = React.useState<LinkPreview | null>(() =>
-    link ? getCachedPreviewSync(link.url) : null,
-  );
   const [sourcePreview, setSourcePreview] = React.useState<LinkPreview | null>(() =>
     link?.source_url ? getCachedPreviewSync(link.source_url) : null,
   );
-  const [loadingTarget, setLoadingTarget] = React.useState(false);
   const [loadingSource, setLoadingSource] = React.useState(false);
 
   const targetDomain = link ? getDomain(link.url) : "";
   const hasSourceUrl = Boolean(link?.source_url);
   const sourceDomain = hasSourceUrl && link?.source_url ? getDomain(link.source_url) : "";
 
-  // Reset states and fetch enrichment previews via global cache when link changes
+  // Reset states and fetch source enrichment preview when link changes
   React.useEffect(() => {
     if (!link) {
-      setTargetPreview(null);
       setSourcePreview(null);
-      setLoadingTarget(false);
       setLoadingSource(false);
       return;
     }
-
-    // Initialize with cached preview if available
-    const cachedTarget = getCachedPreviewSync(link.url);
-    setTargetPreview(cachedTarget);
-    setLoadingTarget(!cachedTarget);
 
     if (hasSourceUrl && link.source_url) {
       const cachedSource = getCachedPreviewSync(link.source_url);
@@ -82,21 +71,6 @@ export function VaultDetailsModal({ link, onClose }: LinkDetailsModalProps) {
     }
 
     let isSubscribed = true;
-
-    // Fetch Target Link Preview
-    fetchLinkPreview(link.url)
-      .then((data) => {
-        if (!isSubscribed) return;
-        setTargetPreview({
-          title: data.title,
-          description: data.description ?? data.summary,
-          image: data.image,
-        });
-      })
-      .catch(() => {})
-      .finally(() => {
-        if (isSubscribed) setLoadingTarget(false);
-      });
 
     // Fetch Source Link Preview if present
     if (hasSourceUrl && link.source_url) {
@@ -120,14 +94,8 @@ export function VaultDetailsModal({ link, onClose }: LinkDetailsModalProps) {
     };
   }, [link, hasSourceUrl]);
 
-  const targetImage =
-    targetPreview?.image ||
-    (link?.youtube_id ? `https://img.youtube.com/vi/${link.youtube_id}/hqdefault.jpg` : null);
-
   const handleModalClose = () => {
-    setTargetPreview(null);
     setSourcePreview(null);
-    setLoadingTarget(false);
     setLoadingSource(false);
     onClose();
   };
@@ -202,63 +170,7 @@ export function VaultDetailsModal({ link, onClose }: LinkDetailsModalProps) {
               <CardContent className="space-y-4 px-6 py-5 overflow-y-auto flex-1">
                 {/* UNIFIED TARGET LINK CARD */}
                 <div className="overflow-hidden rounded-lg border border-[#262626] bg-[#0a0a0a]">
-                  {/* Top Cover Banner: SKELETON ONLY FOR IMAGE/VIDEO WHILE FETCHING */}
-                  {loadingTarget && !link.youtube_id && !targetImage ? (
-                    <Skeleton className="h-60 w-full rounded-t-lg bg-[#1c1c1c] animate-pulse" />
-                  ) : link.youtube_id ? (
-                    <div className="relative aspect-video w-full overflow-hidden bg-black border-b border-[#262626]">
-                      <iframe
-                        src={`https://www.youtube.com/embed/${link.youtube_id}`}
-                        title="YouTube video player"
-                        frameBorder="0"
-                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                        allowFullScreen
-                        className="absolute inset-0 h-full w-full"
-                      />
-                    </div>
-                  ) : targetImage ? (
-                    <div className="relative max-h-96 w-full overflow-hidden bg-black border-b border-[#262626]">
-                      <img
-                        src={targetImage}
-                        alt=""
-                        className="h-full w-full object-cover opacity-90"
-                      />
-                      <div className="absolute top-2.5 left-2.5 flex items-center gap-1.5 rounded bg-black/80 border border-[#262626] px-2 py-0.5 text-[10px] font-mono text-white backdrop-blur-sm">
-                        <img
-                          src={`https://www.google.com/s2/favicons?domain=${targetDomain}&sz=32`}
-                          alt=""
-                          className="size-3"
-                        />
-                        <span>{targetDomain}</span>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="relative h-20 w-full overflow-hidden bg-[#0d0d0d] p-3 flex items-center justify-between border-b border-[#262626]">
-                      <div className="flex items-center gap-2.5">
-                        <div className="size-9 rounded-md border border-[#262626] bg-[#1a1a1a] grid place-items-center">
-                          <img
-                            src={`https://www.google.com/s2/favicons?domain=${targetDomain}&sz=64`}
-                            alt=""
-                            className="size-4.5"
-                          />
-                        </div>
-                        <div>
-                          <h4 className="text-xs font-semibold text-white truncate max-w-xs">
-                            {link.title}
-                          </h4>
-                          <p className="text-[10px] font-mono text-zinc-400 mt-0.5">
-                            {targetDomain}
-                          </p>
-                        </div>
-                      </div>
-                      <Badge
-                        variant="outline"
-                        className="font-semibold text-[10px] uppercase border-[#262626] bg-[#141414] text-zinc-300 px-2 py-0.5"
-                      >
-                        Target Link
-                      </Badge>
-                    </div>
-                  )}
+                  <VaultLinkCover link={link} layout="detail" />
 
                   {/* Web Page Details & AI Summary - RENDERS IMMEDIATELY */}
                   <div className="p-4 space-y-3">
@@ -269,13 +181,11 @@ export function VaultDetailsModal({ link, onClose }: LinkDetailsModalProps) {
                         rel="noopener noreferrer"
                         className="inline-flex items-center gap-1.5 text-xs font-semibold text-white hover:underline transition-all"
                       >
-                        <span>{targetPreview?.title || link.title}</span>
+                        <span>{link.title}</span>
                         <ExternalLink className="size-3.5 text-zinc-400 hover:text-white" />
                       </a>
                       <p className="mt-1 text-xs leading-relaxed text-zinc-400 font-normal">
-                        {targetPreview?.description ||
-                          link.summary ||
-                          `Web page resource on ${targetDomain}.`}
+                        {link.summary || `Web page resource on ${targetDomain}.`}
                       </p>
                       <p className="text-[10px] font-mono text-zinc-500 truncate pt-1">
                         <a
