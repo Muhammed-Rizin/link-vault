@@ -45,7 +45,7 @@ export function VaultLinkForm() {
     <AnimatePresence>
       {formOpen && (
         <motion.div
-          className="fixed inset-0 z-50 grid place-items-center bg-black/70 px-4 backdrop-blur-sm"
+          className="fixed inset-0 z-50 grid place-items-center bg-black/60 px-4 backdrop-blur-md"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
@@ -59,12 +59,12 @@ export function VaultLinkForm() {
             className="w-full max-w-xl"
             onClick={(e) => e.stopPropagation()}
           >
-            <Card className="border-[#262626] bg-[#141414] shadow-2xl overflow-hidden rounded-xl">
-              <CardHeader className="relative pb-3 px-6 pt-5 border-b border-[#262626]">
+            <Card className="border-border/80 bg-card text-card-foreground shadow-2xl overflow-hidden rounded-2xl">
+              <CardHeader className="relative pb-3 px-6 pt-5 border-b border-border/80">
                 {isEnriching && (
-                  <div className="absolute inset-x-0 top-0 h-1 bg-[#262626] overflow-hidden">
+                  <div className="absolute inset-x-0 top-0 h-1 bg-muted overflow-hidden">
                     <motion.div 
-                      className="h-full bg-white"
+                      className="h-full bg-primary"
                       initial={{ width: "0%" }}
                       animate={{ width: "100%" }}
                       transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
@@ -73,15 +73,15 @@ export function VaultLinkForm() {
                 )}
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex items-center gap-3">
-                    <div className="p-2 rounded-md border border-[#262626] bg-[#0a0a0a] text-white">
+                    <div className="p-2 rounded-xl border border-border/80 bg-muted text-primary">
                       <Sparkles className="size-4" />
                     </div>
                     <div>
-                      <CardTitle className="flex items-center gap-2 text-base font-bold text-white">
+                      <CardTitle className="flex items-center gap-2 text-base font-bold text-foreground">
                         {formMode === "create" ? "Add link to vault" : "Edit link"}
-                        {isEnriching && <Loader2 className="size-3.5 animate-spin text-white" />}
+                        {isEnriching && <Loader2 className="size-3.5 animate-spin text-primary" />}
                       </CardTitle>
-                      <CardDescription className="text-xs font-normal text-zinc-400 mt-0.5">
+                      <CardDescription className="text-xs font-normal text-muted-foreground mt-0.5">
                         Save target URL, source URL, dynamic category, and summary.
                       </CardDescription>
                     </div>
@@ -90,7 +90,7 @@ export function VaultLinkForm() {
                     size="icon-xs"
                     variant="ghost"
                     onClick={handleClose}
-                    className="rounded text-zinc-400 hover:bg-[#262626]"
+                    className="rounded-lg text-muted-foreground hover:text-foreground hover:bg-accent"
                   >
                     <X className="size-4" />
                   </Button>
@@ -100,7 +100,7 @@ export function VaultLinkForm() {
               <CardContent className="px-6 py-4">
                 <form onSubmit={handleSubmit} className="space-y-4">
                   <div className="space-y-1">
-                    <label className="text-[11px] font-semibold text-zinc-400">
+                    <label className="text-[11px] font-semibold text-muted-foreground">
                       Target URL
                     </label>
                     <div className="flex gap-2">
@@ -109,14 +109,14 @@ export function VaultLinkForm() {
                         onChange={(e) => setFormState((prev) => ({ ...prev, url: e.target.value }))}
                         placeholder="https://example.com/article"
                         required
-                        className={cn("flex-1 h-9 bg-[#0a0a0a] border-[#262626] rounded-md text-xs", isEnriching && "opacity-50 pointer-events-none")}
+                        className={cn("flex-1 h-9 bg-card border-border/80 rounded-xl text-xs", isEnriching && "opacity-50 pointer-events-none")}
                       />
                       <Button
                         type="button"
                         variant="outline"
                         onClick={handleAutoEnrich}
                         disabled={isEnriching}
-                        className="h-9 px-3 font-semibold text-xs border-[#262626] bg-[#0a0a0a] text-white hover:bg-[#262626] rounded-md"
+                        className="h-9 px-3 font-semibold text-xs border-border/80 bg-muted text-foreground hover:bg-accent rounded-xl"
                       >
                         {isEnriching ? "Enriching..." : "Auto enrich"}
                       </Button>
@@ -124,24 +124,24 @@ export function VaultLinkForm() {
                   </div>
 
                   <div className="space-y-1">
-                    <label className="text-[11px] font-semibold text-zinc-400">
+                    <label className="text-[11px] font-semibold text-muted-foreground">
                       Title
                     </label>
                     {isEnriching ? (
-                      <Skeleton className="h-9 w-full rounded-md" />
+                      <Skeleton className="h-9 w-full rounded-xl" />
                     ) : (
                       <Input
                         value={formState.title}
                         onChange={(e) => setFormState((prev) => ({ ...prev, title: e.target.value }))}
                         placeholder="Readable title"
                         required
-                        className="h-9 bg-[#0a0a0a] border-[#262626] rounded-md text-xs"
+                        className="h-9 bg-card border-border/80 rounded-xl text-xs"
                       />
                     )}
                   </div>
 
                   <div className="space-y-1">
-                    <label className="text-[11px] font-semibold text-zinc-400">
+                    <label className="text-[11px] font-semibold text-muted-foreground">
                       Source URL (optional)
                     </label>
                     <Input
@@ -150,7 +150,7 @@ export function VaultLinkForm() {
                         setFormState((prev) => ({ ...prev, sourceUrl: e.target.value }))
                       }
                       placeholder="https://instagram.com/..., twitter.com/..."
-                      className="h-9 bg-[#0a0a0a] border-[#262626] rounded-md text-xs"
+                      className="h-9 bg-card border-border/80 rounded-xl text-xs"
                     />
                   </div>
 
@@ -169,11 +169,11 @@ export function VaultLinkForm() {
                   </div>
 
                   <div className="space-y-1">
-                    <label className="text-[11px] font-semibold text-zinc-400">
+                    <label className="text-[11px] font-semibold text-muted-foreground">
                       Summary (optional)
                     </label>
                     {isEnriching ? (
-                      <div className="space-y-1.5 p-2.5 rounded-md border border-[#262626] bg-[#0a0a0a]">
+                      <div className="space-y-1.5 p-2.5 rounded-xl border border-border/80 bg-muted/40">
                         <Skeleton className="h-3 w-full" />
                         <Skeleton className="h-3 w-11/12" />
                         <Skeleton className="h-3 w-4/5" />
@@ -185,31 +185,31 @@ export function VaultLinkForm() {
                           setFormState((prev) => ({ ...prev, summary: e.target.value }))
                         }
                         rows={3}
-                        className="w-full rounded-md border border-[#262626] bg-[#0a0a0a] px-3 py-2 text-xs text-white placeholder:text-zinc-500 focus-visible:border-zinc-500 focus-visible:outline-none"
+                        className="w-full rounded-xl border border-border/80 bg-card px-3 py-2 text-xs text-foreground placeholder:text-muted-foreground focus-visible:border-primary focus-visible:outline-none"
                         placeholder="Auto-enrich populates this automatically."
                       />
                     )}
                   </div>
 
                   {formError && (
-                    <p className="text-xs text-red-400 font-semibold bg-red-500/10 p-2.5 rounded-md border border-red-500/20 text-center">
+                    <p className="text-xs text-destructive font-semibold bg-destructive/10 p-2.5 rounded-xl border border-destructive/20 text-center">
                       {formError}
                     </p>
                   )}
 
-                  <div className="flex items-center justify-end gap-2 pt-3 border-t border-[#262626]">
+                  <div className="flex items-center justify-end gap-2 pt-3 border-t border-border/80">
                     <Button
                       type="button"
                       variant="ghost"
                       onClick={handleClose}
-                      className="font-medium text-xs rounded-md text-zinc-400 hover:bg-[#262626]"
+                      className="font-medium text-xs rounded-xl text-muted-foreground hover:text-foreground hover:bg-accent"
                     >
                       Cancel
                     </Button>
                     <Button
                       type="submit"
                       disabled={isSubmitting || isEnriching}
-                      className="h-9 px-4 font-semibold text-xs bg-white text-black hover:bg-zinc-200 rounded-md transition-colors"
+                      className="h-9 px-4 font-semibold text-xs bg-primary text-primary-foreground hover:bg-primary/90 rounded-xl transition-colors shadow-sm"
                     >
                       {isSubmitting ? "Saving..." : formMode === "create" ? "Save to vault" : "Update link"}
                     </Button>

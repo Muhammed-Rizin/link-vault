@@ -28,19 +28,24 @@ export const metadata: Metadata = {
   },
 };
 
+import { ThemeProvider } from "@/shared/components/providers/ThemeProvider";
+
 export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="dark">
+    <html lang="en" suppressHydrationWarning>
       <body
         className={`${inter.variable} ${geist.variable} ${geistMono.variable} antialiased`}
       >
-        <RegisterServiceWorker />
-        {children}
+        <ThemeProvider>
+          <RegisterServiceWorker />
+          {children}
+        </ThemeProvider>
       </body>
     </html>
   );
 }
+

@@ -8,6 +8,8 @@ import { Button } from "@/shared/components/ui/button";
 import { cn } from "@/shared/utils/utils";
 import { useVault } from "@/features/vault/context/VaultContext";
 import { sortCategories } from "@/features/vault/services/category.service";
+import { ThemeToggle } from "@/shared/components/ui/ThemeToggle";
+
 
 interface SidebarProps {
   userEmail: string;
@@ -144,7 +146,15 @@ export function Sidebar({ userEmail, userAvatarUrl }: SidebarProps) {
         </div>
       </div>
 
-      <div className="border-t border-sidebar-border p-3">
+      <div className="border-t border-sidebar-border p-3 space-y-2">
+        {!collapsed ? (
+          <ThemeToggle variant="full" />
+        ) : (
+          <div className="flex justify-center">
+            <ThemeToggle variant="icon" />
+          </div>
+        )}
+
         <div
           className={cn(
             "rounded-2xl border border-border/80 bg-card/60 p-3 shadow-sm",

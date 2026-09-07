@@ -7,6 +7,8 @@ import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
 import { cn } from "@/shared/utils/utils";
 import { useVault } from "@/features/vault/context/VaultContext";
+import { ThemeToggle } from "@/shared/components/ui/ThemeToggle";
+
 
 export function Header() {
   const {
@@ -117,6 +119,9 @@ export function Header() {
           </Button>
         </div>
 
+        {/* Theme Toggle Button */}
+        <ThemeToggle />
+
         <Button
           size="sm"
           onClick={() => openCreate()}
@@ -125,6 +130,7 @@ export function Header() {
           <Plus className="size-4" />
           <span className="hidden sm:inline">Add Link</span>
         </Button>
+
       </div>
 
       <AnimatePresence>

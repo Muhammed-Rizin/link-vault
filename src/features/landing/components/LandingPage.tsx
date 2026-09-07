@@ -19,8 +19,9 @@ export function LandingPage({ isLoggedIn }: { isLoggedIn: boolean }) {
   };
 
   return (
-    <div className="min-h-screen bg-[#0a0a0a] text-white selection:bg-white/20 selection:text-white overflow-x-hidden">
+    <div className="min-h-screen bg-background text-foreground selection:bg-primary/20 selection:text-primary overflow-x-hidden">
       <AuthModal
+
         isOpen={isAuthModalOpen}
         onOpenChange={setIsAuthModalOpen}
         defaultMode={authMode}

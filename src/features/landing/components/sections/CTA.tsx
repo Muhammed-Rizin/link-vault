@@ -28,31 +28,31 @@ function Star({ className, ...props }: React.SVGProps<SVGSVGElement>) {
 
 export function CTA({ isLoggedIn, onOpenSignup }: CTAProps) {
   return (
-    <section className="py-16 md:py-24 relative overflow-hidden bg-[#0a0a0a] border-t border-[#262626]">
+    <section className="py-16 md:py-24 relative overflow-hidden bg-background border-t border-border/80">
       <div className="container mx-auto px-6 relative z-10">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          className="max-w-5xl mx-auto relative overflow-hidden rounded-lg border border-[#262626] bg-[#141414] p-8 py-16 text-center"
+          className="max-w-5xl mx-auto relative overflow-hidden rounded-2xl border border-border/80 bg-card/60 p-8 py-16 text-center shadow-lg"
         >
           <div className="relative z-10 max-w-2xl mx-auto">
-            <h2 className="mb-4 text-3xl font-bold md:text-5xl tracking-tight leading-none text-white">
+            <h2 className="mb-4 text-3xl font-bold md:text-5xl tracking-tight leading-none text-foreground">
               Build your vault today.
             </h2>
-            <p className="mb-8 text-sm text-zinc-400 font-normal">
+            <p className="mb-8 text-sm text-muted-foreground font-normal">
               Capture high-value web links. Simplify your research workflow with AI intelligence.
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
               <Button
                 size="default"
-                className="h-11 rounded-md px-8 text-xs font-semibold bg-white text-black hover:bg-zinc-200 transition-colors"
+                className="h-11 rounded-xl px-8 text-xs font-semibold bg-primary text-primary-foreground hover:bg-primary/90 transition-colors shadow-md"
                 onClick={() => (isLoggedIn ? (window.location.href = "/links") : onOpenSignup())}
               >
                 {isLoggedIn ? "Access vault dashboard" : "Get started free"}
               </Button>
-              <div className="flex items-center gap-2 text-zinc-400 text-xs font-medium">
-                <Star className="size-3.5 text-zinc-400 fill-zinc-400" />
+              <div className="flex items-center gap-2 text-muted-foreground text-xs font-medium">
+                <Star className="size-3.5 text-amber-500 fill-amber-500" />
                 <span>Free for personal research</span>
               </div>
             </div>

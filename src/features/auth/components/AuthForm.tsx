@@ -61,29 +61,29 @@ export function AuthForm({ mode, onCancel }: AuthFormProps) {
   const isSignup = currentMode === "signup";
 
   return (
-    <Card className="border-[#262626] bg-[#141414] w-full max-w-md shadow-2xl rounded-lg overflow-hidden relative">
+    <Card className="border-border/80 bg-card text-card-foreground w-full max-w-md shadow-2xl rounded-2xl overflow-hidden relative">
       {onCancel && (
         <Button
           size="icon-xs"
           variant="ghost"
           onClick={onCancel}
           aria-label="Close"
-          className="absolute top-4 right-4 z-10 rounded text-zinc-400 hover:bg-[#262626]"
+          className="absolute top-4 right-4 z-10 rounded-lg text-muted-foreground hover:text-foreground hover:bg-accent"
         >
           <X className="size-4" />
         </Button>
       )}
 
-      <CardHeader className="pb-3 px-6 pt-6 border-b border-[#262626] text-center">
+      <CardHeader className="pb-3 px-6 pt-6 border-b border-border/80 text-center">
         <div className="flex flex-col items-center gap-3">
-          <div className="p-3 rounded-lg border border-[#262626] bg-[#0a0a0a]">
+          <div className="p-3 rounded-xl border border-border/80 bg-primary/10">
             <Logo iconClassName="size-8" showText={false} />
           </div>
           <div>
-            <CardTitle className="text-balance text-lg font-bold tracking-tight text-white">
+            <CardTitle className="text-balance text-lg font-bold tracking-tight text-foreground">
               {isSignup ? "Create vault account" : "Welcome back"}
             </CardTitle>
-            <CardDescription className="mt-1 text-xs font-normal text-zinc-400">
+            <CardDescription className="mt-1 text-xs font-normal text-muted-foreground">
               {isSignup
                 ? "Join high-signal web research."
                 : "Access your digital second brain."}
@@ -106,37 +106,37 @@ export function AuthForm({ mode, onCancel }: AuthFormProps) {
           >
             {isSignup && (
               <div className="relative">
-                <User className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-zinc-500" />
+                <User className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
                 <Input
                   placeholder="Full name"
                   value={fullName}
                   onChange={(e) => setFullName(e.target.value)}
-                  className="bg-[#0a0a0a] pl-9 border-[#262626] h-10 rounded-md text-xs"
+                  className="bg-background pl-9 border-border/80 h-10 rounded-xl text-xs text-foreground placeholder:text-muted-foreground"
                   required
                 />
               </div>
             )}
 
             <div className="relative">
-              <Mail className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-zinc-500" />
+              <Mail className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
               <Input
                 type="email"
                 placeholder="name@example.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="bg-[#0a0a0a] pl-9 border-[#262626] h-10 rounded-md text-xs"
+                className="bg-background pl-9 border-border/80 h-10 rounded-xl text-xs text-foreground placeholder:text-muted-foreground"
                 required
               />
             </div>
 
             <div className="relative">
-              <Lock className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-zinc-500" />
+              <Lock className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
               <Input
                 type="password"
                 placeholder="••••••••"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="bg-[#0a0a0a] pl-9 border-[#262626] h-10 rounded-md text-xs"
+                className="bg-background pl-9 border-border/80 h-10 rounded-xl text-xs text-foreground placeholder:text-muted-foreground"
                 required
               />
             </div>
@@ -145,13 +145,13 @@ export function AuthForm({ mode, onCancel }: AuthFormProps) {
               <motion.div 
                 initial={{ opacity: 0, y: 5 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="text-xs text-red-400 font-semibold bg-red-500/10 p-2.5 rounded-md border border-red-500/20 text-center"
+                className="text-xs text-destructive font-semibold bg-destructive/10 p-2.5 rounded-xl border border-destructive/20 text-center"
               >
                 {error}
               </motion.div>
             )}
 
-            <Button type="submit" disabled={isSubmitting} className="w-full h-10 font-semibold text-xs bg-white text-black hover:bg-zinc-200 rounded-md transition-colors">
+            <Button type="submit" disabled={isSubmitting} className="w-full h-10 font-bold text-xs bg-primary text-primary-foreground hover:bg-primary/90 rounded-xl transition-colors shadow-md">
               {isSubmitting ? "Processing..." : isSignup ? "Create my vault" : "Sign in to vault"}
               <ArrowRight className="ml-2 size-4" />
             </Button>
@@ -160,10 +160,10 @@ export function AuthForm({ mode, onCancel }: AuthFormProps) {
 
         <div className="relative">
           <div className="absolute inset-0 flex items-center">
-            <span className="w-full border-t border-[#262626]" />
+            <span className="w-full border-t border-border/80" />
           </div>
-          <div className="relative flex justify-center text-[10px] font-semibold uppercase tracking-widest text-zinc-500">
-            <span className="bg-[#141414] px-2">Instant access</span>
+          <div className="relative flex justify-center text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
+            <span className="bg-card px-2">Instant access</span>
           </div>
         </div>
 
@@ -172,7 +172,7 @@ export function AuthForm({ mode, onCancel }: AuthFormProps) {
             variant="outline"
             onClick={() => handleOAuth("google")}
             disabled={oauthLoading !== null}
-            className="bg-[#0a0a0a] border-[#262626] h-10 font-semibold text-xs rounded-md hover:bg-[#1c1c1c] text-white"
+            className="bg-background border-border/80 h-10 font-semibold text-xs rounded-xl hover:bg-accent text-foreground transition-colors shadow-sm"
           >
             <GoogleIcon className="size-4 mr-2" />
             Google
@@ -181,16 +181,16 @@ export function AuthForm({ mode, onCancel }: AuthFormProps) {
             variant="outline"
             onClick={() => handleOAuth("github")}
             disabled={oauthLoading !== null}
-            className="bg-[#0a0a0a] border-[#262626] h-10 font-semibold text-xs rounded-md hover:bg-[#1c1c1c] text-white"
+            className="bg-background border-border/80 h-10 font-semibold text-xs rounded-xl hover:bg-accent text-foreground transition-colors shadow-sm"
           >
             <Github className="size-4 mr-2" />
             GitHub
           </Button>
         </div>
 
-        <p className="text-center text-xs text-zinc-400 font-normal pt-1">
+        <p className="text-center text-xs text-muted-foreground font-normal pt-1">
           {isSignup ? "Already have an account?" : "New to LinkVault?"}{" "}
-          <button onClick={handleToggleMode} className="font-semibold text-white hover:underline underline-offset-4">
+          <button onClick={handleToggleMode} className="font-bold text-foreground hover:text-primary hover:underline underline-offset-4 transition-colors">
             {isSignup ? "Sign in" : "Create one"}
           </button>
         </p>

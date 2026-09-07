@@ -139,7 +139,7 @@
     background: var(--scrollbar-thumb-hover);
   }
   body {
-    @apply bg-background text-foreground font-sans antialiased;
+    @apply bg-background text-foreground font-sans antialiased transition-colors duration-300;
     font-family: var(--font-inter), "Inter", -apple-system, BlinkMacSystemFont, sans-serif;
   }
   html {
@@ -170,3 +170,27 @@
     @apply bg-card border border-border shadow-sm rounded-lg;
   }
 }
+
+/* Theme Switch View Transitions API styling */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation: none;
+  mix-blend-mode: normal;
+}
+
+::view-transition-old(root) {
+  z-index: 1;
+}
+
+::view-transition-new(root) {
+  z-index: 9999;
+}
+
+.dark::view-transition-old(root) {
+  z-index: 9999;
+}
+
+.dark::view-transition-new(root) {
+  z-index: 1;
+}
+

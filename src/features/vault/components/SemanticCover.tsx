@@ -98,21 +98,21 @@ export function SemanticCover({ url, title, className }: SemanticCoverProps) {
   switch (coverType) {
     case "spreadsheet":
       return (
-        <div className={cn("relative h-60 w-full overflow-hidden bg-gradient-to-br from-[#0c3e21] via-[#041a0e] to-[#010a05] border-b border-[#262626] shrink-0 flex flex-col justify-between p-4", className)}>
+        <div className={cn("relative h-60 w-full overflow-hidden bg-gradient-to-br from-[#0c3e21]/40 via-[#041a0e]/40 to-muted border-b border-border/80 shrink-0 flex flex-col justify-between p-4", className)}>
           {/* Subtle grid mockup representing spreadsheet cells */}
-          <div className="grid grid-cols-4 gap-1.5 opacity-20 select-none pointer-events-none">
+          <div className="grid grid-cols-4 gap-1.5 opacity-25 select-none pointer-events-none">
             {Array.from({ length: 12 }).map((_, i) => (
-              <div key={i} className="h-6 rounded border border-emerald-500/30 bg-emerald-500/10 flex items-center px-1">
-                <div className="h-1.5 w-1/2 bg-emerald-500/20 rounded-xs" />
+              <div key={i} className="h-6 rounded-md border border-emerald-500/30 bg-emerald-500/10 flex items-center px-1">
+                <div className="h-1.5 w-1/2 bg-emerald-500/30 rounded-xs" />
               </div>
             ))}
           </div>
           <div className="z-10 flex items-center justify-between mt-auto">
-            <div className="flex items-center gap-2 rounded bg-black/60 border border-emerald-950 px-2.5 py-1 text-[10px] font-mono text-emerald-300 backdrop-blur-sm shadow-md">
+            <div className="flex items-center gap-2 rounded-md bg-background/90 border border-border/80 px-2.5 py-1 text-[10px] font-mono text-foreground backdrop-blur-md shadow-sm">
               <img src={faviconUrl} alt="" className="size-3.5 rounded-xs" onError={(e) => { (e.target as HTMLElement).style.display = "none"; }} />
               <span>{domain}</span>
             </div>
-            <div className="flex items-center gap-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 px-3 py-1 text-[10px] font-semibold text-emerald-400 backdrop-blur-sm">
+            <div className="flex items-center gap-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 px-3 py-1 text-[10px] font-semibold text-emerald-500 backdrop-blur-md">
               <Table className="size-3.5" />
               <span>Spreadsheet</span>
             </div>
@@ -122,21 +122,21 @@ export function SemanticCover({ url, title, className }: SemanticCoverProps) {
 
     case "figma":
       return (
-        <div className={cn("relative h-60 w-full overflow-hidden bg-gradient-to-br from-[#3b0764] via-[#120421] to-[#07010d] border-b border-[#262626] shrink-0 flex flex-col justify-between p-4", className)}>
+        <div className={cn("relative h-60 w-full overflow-hidden bg-gradient-to-br from-[#3b0764]/40 via-[#120421]/40 to-muted border-b border-border/80 shrink-0 flex flex-col justify-between p-4", className)}>
           {/* Vector canvas shapes mock */}
-          <div className="absolute inset-0 opacity-15 flex items-center justify-center select-none pointer-events-none">
+          <div className="absolute inset-0 opacity-20 flex items-center justify-center select-none pointer-events-none">
             <div className="absolute w-28 h-28 rounded-full border border-purple-500/40 -translate-x-12 -translate-y-4" />
             <div className="absolute w-40 h-24 border border-purple-500/30 rotate-12 translate-x-8" />
             <div className="absolute w-14 h-14 border border-purple-500/40 translate-x-12 -translate-y-8 rounded-xs" />
-            <div className="absolute h-0.5 w-full bg-purple-500/10 top-1/2 left-0" />
-            <div className="absolute w-0.5 h-full bg-purple-500/10 left-1/2 top-0" />
+            <div className="absolute h-0.5 w-full bg-purple-500/20 top-1/2 left-0" />
+            <div className="absolute w-0.5 h-full bg-purple-500/20 left-1/2 top-0" />
           </div>
           <div className="z-10 flex items-center justify-between mt-auto">
-            <div className="flex items-center gap-2 rounded bg-black/60 border border-purple-950 px-2.5 py-1 text-[10px] font-mono text-purple-300 backdrop-blur-sm shadow-md">
+            <div className="flex items-center gap-2 rounded-md bg-background/90 border border-border/80 px-2.5 py-1 text-[10px] font-mono text-foreground backdrop-blur-md shadow-sm">
               <img src={faviconUrl} alt="" className="size-3.5 rounded-xs" onError={(e) => { (e.target as HTMLElement).style.display = "none"; }} />
               <span>{domain}</span>
             </div>
-            <div className="flex items-center gap-1.5 rounded-full bg-purple-500/10 border border-purple-500/30 px-3 py-1 text-[10px] font-semibold text-purple-400 backdrop-blur-sm">
+            <div className="flex items-center gap-1.5 rounded-full bg-purple-500/10 border border-purple-500/30 px-3 py-1 text-[10px] font-semibold text-purple-500 backdrop-blur-md">
               <Palette className="size-3.5" />
               <span>Design Canvas</span>
             </div>
@@ -146,20 +146,20 @@ export function SemanticCover({ url, title, className }: SemanticCoverProps) {
 
     case "document":
       return (
-        <div className={cn("relative h-60 w-full overflow-hidden bg-gradient-to-br from-[#172554] via-[#091024] to-[#02050f] border-b border-[#262626] shrink-0 flex flex-col justify-between p-4", className)}>
+        <div className={cn("relative h-60 w-full overflow-hidden bg-gradient-to-br from-[#172554]/40 via-[#091024]/40 to-muted border-b border-border/80 shrink-0 flex flex-col justify-between p-4", className)}>
           {/* Document page and text lines mock */}
-          <div className="flex flex-col gap-2.5 opacity-20 max-w-[80%] mt-2 select-none pointer-events-none">
-            <div className="h-3 w-1/3 rounded bg-blue-400" />
-            <div className="h-2 w-full rounded bg-blue-400/60" />
-            <div className="h-2 w-5/6 rounded bg-blue-400/60" />
-            <div className="h-2 w-4/5 rounded bg-blue-400/60" />
+          <div className="flex flex-col gap-2.5 opacity-25 max-w-[80%] mt-2 select-none pointer-events-none">
+            <div className="h-3 w-1/3 rounded-md bg-sky-500" />
+            <div className="h-2 w-full rounded-md bg-sky-500/60" />
+            <div className="h-2 w-5/6 rounded-md bg-sky-500/60" />
+            <div className="h-2 w-4/5 rounded-md bg-sky-500/60" />
           </div>
           <div className="z-10 flex items-center justify-between mt-auto">
-            <div className="flex items-center gap-2 rounded bg-black/60 border border-blue-950 px-2.5 py-1 text-[10px] font-mono text-blue-300 backdrop-blur-sm shadow-md">
+            <div className="flex items-center gap-2 rounded-md bg-background/90 border border-border/80 px-2.5 py-1 text-[10px] font-mono text-foreground backdrop-blur-md shadow-sm">
               <img src={faviconUrl} alt="" className="size-3.5 rounded-xs" onError={(e) => { (e.target as HTMLElement).style.display = "none"; }} />
               <span>{domain}</span>
             </div>
-            <div className="flex items-center gap-1.5 rounded-full bg-blue-500/10 border border-blue-500/30 px-3 py-1 text-[10px] font-semibold text-blue-400 backdrop-blur-sm">
+            <div className="flex items-center gap-1.5 rounded-full bg-sky-500/10 border border-sky-500/30 px-3 py-1 text-[10px] font-semibold text-sky-500 backdrop-blur-md">
               <FileText className="size-3.5" />
               <span>Document</span>
             </div>
@@ -169,31 +169,31 @@ export function SemanticCover({ url, title, className }: SemanticCoverProps) {
 
     case "code":
       return (
-        <div className={cn("relative h-60 w-full overflow-hidden bg-gradient-to-br from-[#1e1e1e] via-[#0d0d0d] to-[#040404] border-b border-[#262626] shrink-0 flex flex-col justify-between p-4", className)}>
+        <div className={cn("relative h-60 w-full overflow-hidden bg-gradient-to-br from-muted via-background to-muted/80 border-b border-border/80 shrink-0 flex flex-col justify-between p-4", className)}>
           {/* Code syntax highlighted elements mock */}
-          <div className="font-mono text-[9px] text-zinc-500 space-y-1.5 opacity-30 mt-1 select-none pointer-events-none">
+          <div className="font-mono text-[9px] text-muted-foreground space-y-1.5 opacity-50 mt-1 select-none pointer-events-none">
             <div className="flex gap-1.5">
-              <span className="text-purple-400">import</span>
-              <span className="text-blue-400">{"{ link }"}</span>
-              <span className="text-purple-400">from</span>
-              <span className="text-green-400">"@/vault"</span>
+              <span className="text-purple-500 font-bold">import</span>
+              <span className="text-sky-500 font-bold">{"{ link }"}</span>
+              <span className="text-purple-500 font-bold">from</span>
+              <span className="text-emerald-500 font-bold">"@/vault"</span>
             </div>
             <div className="flex gap-1.5 pl-3">
-              <span className="text-purple-400">const</span>
-              <span className="text-yellow-400">render</span>
-              <span className="text-zinc-400">=</span>
-              <span className="text-yellow-400">()</span>
-              <span className="text-zinc-400">=&gt;</span>
-              <span className="text-blue-400">active</span>
+              <span className="text-purple-500 font-bold">const</span>
+              <span className="text-amber-500 font-bold">render</span>
+              <span className="text-foreground">=</span>
+              <span className="text-amber-500">()</span>
+              <span className="text-foreground">=&gt;</span>
+              <span className="text-sky-500 font-bold">active</span>
             </div>
-            <div className="pl-3 text-zinc-600">// build system verified</div>
+            <div className="pl-3 text-muted-foreground/60">// build system verified</div>
           </div>
           <div className="z-10 flex items-center justify-between mt-auto">
-            <div className="flex items-center gap-2 rounded bg-black/60 border border-zinc-800 px-2.5 py-1 text-[10px] font-mono text-zinc-300 backdrop-blur-sm shadow-md">
+            <div className="flex items-center gap-2 rounded-md bg-background/90 border border-border/80 px-2.5 py-1 text-[10px] font-mono text-foreground backdrop-blur-md shadow-sm">
               <img src={faviconUrl} alt="" className="size-3.5 rounded-xs" onError={(e) => { (e.target as HTMLElement).style.display = "none"; }} />
               <span>{domain}</span>
             </div>
-            <div className="flex items-center gap-1.5 rounded-full bg-zinc-500/10 border border-zinc-500/30 px-3 py-1 text-[10px] font-semibold text-zinc-400 backdrop-blur-sm">
+            <div className="flex items-center gap-1.5 rounded-full bg-primary/10 border border-primary/20 px-3 py-1 text-[10px] font-semibold text-primary backdrop-blur-md">
               <Code className="size-3.5" />
               <span>Code Repository</span>
             </div>
@@ -203,20 +203,20 @@ export function SemanticCover({ url, title, className }: SemanticCoverProps) {
 
     case "docs":
       return (
-        <div className={cn("relative h-60 w-full overflow-hidden bg-gradient-to-br from-[#1e293b] via-[#0f172a] to-[#020617] border-b border-[#262626] shrink-0 flex flex-col justify-between p-4", className)}>
+        <div className={cn("relative h-60 w-full overflow-hidden bg-gradient-to-br from-muted via-background to-muted/80 border-b border-border/80 shrink-0 flex flex-col justify-between p-4", className)}>
           {/* Docs layout structure mock */}
-          <div className="space-y-2 opacity-25 mt-2 select-none pointer-events-none">
-            <div className="h-3 w-1/4 rounded bg-slate-400" />
-            <div className="h-0.5 bg-slate-700/50 w-full" />
-            <div className="h-2 w-2/3 rounded bg-slate-400/60" />
-            <div className="h-2 w-1/2 rounded bg-slate-400/60" />
+          <div className="space-y-2 opacity-30 mt-2 select-none pointer-events-none">
+            <div className="h-3 w-1/4 rounded-md bg-foreground/40" />
+            <div className="h-0.5 bg-border w-full" />
+            <div className="h-2 w-2/3 rounded-md bg-foreground/30" />
+            <div className="h-2 w-1/2 rounded-md bg-foreground/30" />
           </div>
           <div className="z-10 flex items-center justify-between mt-auto">
-            <div className="flex items-center gap-2 rounded bg-black/60 border border-slate-900 px-2.5 py-1 text-[10px] font-mono text-slate-300 backdrop-blur-sm shadow-md">
+            <div className="flex items-center gap-2 rounded-md bg-background/90 border border-border/80 px-2.5 py-1 text-[10px] font-mono text-foreground backdrop-blur-md shadow-sm">
               <img src={faviconUrl} alt="" className="size-3.5 rounded-xs" onError={(e) => { (e.target as HTMLElement).style.display = "none"; }} />
               <span>{domain}</span>
             </div>
-            <div className="flex items-center gap-1.5 rounded-full bg-slate-500/10 border border-slate-500/30 px-3 py-1 text-[10px] font-semibold text-slate-400 backdrop-blur-sm">
+            <div className="flex items-center gap-1.5 rounded-full bg-primary/10 border border-primary/20 px-3 py-1 text-[10px] font-semibold text-primary backdrop-blur-md">
               <BookOpen className="size-3.5" />
               <span>Documentation</span>
             </div>
@@ -226,18 +226,18 @@ export function SemanticCover({ url, title, className }: SemanticCoverProps) {
 
     default:
       return (
-        <div className={cn("relative h-60 w-full overflow-hidden bg-gradient-to-br from-[#18181b] via-[#09090b] to-black border-b border-[#262626] shrink-0 flex flex-col justify-between p-4", className)}>
+        <div className={cn("relative h-60 w-full overflow-hidden bg-gradient-to-br from-muted via-background to-muted/80 border-b border-border/80 shrink-0 flex flex-col justify-between p-4", className)}>
           {/* Abstract background glow with floating central favicon */}
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-zinc-800/10 via-transparent to-transparent opacity-60 select-none pointer-events-none" />
-          <div className="absolute inset-0 flex items-center justify-center opacity-10 select-none pointer-events-none">
-            <Globe className="size-16 stroke-1 text-zinc-500" />
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-primary/5 via-transparent to-transparent opacity-60 select-none pointer-events-none" />
+          <div className="absolute inset-0 flex items-center justify-center opacity-15 select-none pointer-events-none">
+            <Globe className="size-16 stroke-1 text-muted-foreground" />
           </div>
           <div className="z-10 flex items-center justify-between mt-auto">
-            <div className="flex items-center gap-2 rounded bg-black/60 border border-zinc-900 px-2.5 py-1 text-[10px] font-mono text-zinc-400 backdrop-blur-sm shadow-md">
+            <div className="flex items-center gap-2 rounded-md bg-background/90 border border-border/80 px-2.5 py-1 text-[10px] font-mono text-foreground backdrop-blur-md shadow-sm">
               <img src={faviconUrl} alt="" className="size-3.5 rounded-xs" onError={(e) => { (e.target as HTMLElement).style.display = "none"; }} />
               <span>{domain}</span>
             </div>
-            <div className="flex items-center gap-1.5 rounded-full bg-zinc-800 border border-zinc-700/50 px-3 py-1 text-[10px] font-semibold text-zinc-400 backdrop-blur-sm">
+            <div className="flex items-center gap-1.5 rounded-full bg-muted border border-border/80 px-3 py-1 text-[10px] font-semibold text-muted-foreground backdrop-blur-md">
               <Globe className="size-3.5" />
               <span>Web Resource</span>
             </div>

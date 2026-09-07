@@ -56,7 +56,7 @@ export function VaultCard({
 
   return (
     <Card
-      className="border text-card-foreground group relative flex h-full cursor-pointer flex-col justify-end overflow-hidden border-[#262626] bg-[#141414] transition-colors hover:border-zinc-500/50 rounded-lg shadow-sm"
+      className="border border-border/80 bg-card text-card-foreground group relative flex h-full cursor-pointer flex-col justify-end overflow-hidden hover:border-primary/40 transition-all rounded-2xl shadow-sm hover:shadow-md"
       onClick={onOpenDetails}
       role="button"
       tabIndex={0}
@@ -73,7 +73,7 @@ export function VaultCard({
       <CardContent className="flex flex-1 flex-col justify-end p-4 gap-2.5">
         <div className="space-y-2.5">
           <div className="flex items-start justify-between gap-2">
-            <h3 className="line-clamp-2 text-sm font-semibold text-white leading-snug group-hover:text-zinc-200 transition-colors flex-1 min-w-0">
+            <h3 className="line-clamp-2 text-sm font-semibold text-foreground group-hover:text-primary transition-colors flex-1 min-w-0">
               {link.title}
             </h3>
 
@@ -87,8 +87,8 @@ export function VaultCard({
                 }}
                 aria-label="Link options"
                 className={cn(
-                  "rounded transition-all hover:bg-[#262626]",
-                  isMenuOpen ? "opacity-100 bg-[#262626]" : "opacity-50 group-hover:opacity-100",
+                  "rounded-lg transition-all hover:bg-accent text-muted-foreground hover:text-foreground",
+                  isMenuOpen ? "opacity-100 bg-accent text-foreground" : "opacity-50 group-hover:opacity-100",
                 )}
               >
                 <MoreHorizontal className="size-4" />
@@ -99,7 +99,7 @@ export function VaultCard({
                     initial={{ opacity: 0, y: -4, scale: 0.98 }}
                     animate={{ opacity: 1, y: 0, scale: 1 }}
                     exit={{ opacity: 0, y: -4, scale: 0.98 }}
-                    className="absolute top-7 right-0 z-30 w-32 rounded-md border border-[#262626] bg-[#141414] p-1 shadow-xl"
+                    className="absolute top-7 right-0 z-30 w-32 rounded-xl border border-border/80 bg-popover p-1 shadow-xl backdrop-blur-xl"
                   >
                     <button
                       type="button"
@@ -107,7 +107,7 @@ export function VaultCard({
                         event.stopPropagation();
                         onEdit();
                       }}
-                      className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-xs font-medium hover:bg-[#262626] transition-colors text-zinc-200"
+                      className="flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-xs font-medium hover:bg-accent transition-colors text-foreground"
                     >
                       <Pencil className="size-3.5 opacity-70" />
                       Edit
@@ -118,7 +118,7 @@ export function VaultCard({
                         event.stopPropagation();
                         onDelete();
                       }}
-                      className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-xs font-medium text-red-400 hover:bg-red-500/10 transition-colors"
+                      className="flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-xs font-medium text-destructive hover:bg-destructive/10 transition-colors"
                     >
                       <Trash2 className="size-3.5 opacity-70" />
                       Delete
@@ -133,22 +133,22 @@ export function VaultCard({
           <div>
             <Badge
               variant="outline"
-              className="h-4.5 px-1.5 text-[9px] font-medium uppercase tracking-wider bg-[#0a0a0a] border-[#262626] text-zinc-300"
+              className="h-4.5 px-2 text-[9px] font-semibold uppercase tracking-wider bg-muted/60 border-border/80 text-muted-foreground rounded-md"
             >
               {link.category}
             </Badge>
           </div>
 
           {/* Expanded Summary Snippet */}
-          <p className="line-clamp-3 text-xs leading-relaxed font-normal text-zinc-400">
+          <p className="line-clamp-3 text-xs leading-relaxed font-normal text-muted-foreground">
             {link.summary || "No summary captured yet. Click to view details or enrich metadata."}
           </p>
         </div>
 
         {/* Footer Actions Anchored at Bottom */}
-        <div className="mt-auto pt-3 border-t border-[#262626] flex items-center justify-between gap-2">
-          <div className="flex items-center gap-1.5 text-[10px] text-zinc-500 font-mono">
-            <Globe className="size-3 text-zinc-500" />
+        <div className="mt-auto pt-3 border-t border-border/60 flex items-center justify-between gap-2">
+          <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground font-mono">
+            <Globe className="size-3 text-muted-foreground" />
             <span className="truncate max-w-35">{domain}</span>
           </div>
 
@@ -158,16 +158,16 @@ export function VaultCard({
               variant="ghost"
               onClick={handleCopy}
               title="Copy URL"
-              className="rounded text-zinc-400 hover:text-white hover:bg-[#262626]"
+              className="rounded-lg text-muted-foreground hover:text-foreground hover:bg-accent"
             >
-              {copied ? <Check className="size-3 text-emerald-400" /> : <Copy className="size-3" />}
+              {copied ? <Check className="size-3 text-emerald-500" /> : <Copy className="size-3" />}
             </Button>
 
             <Button
               asChild
               size="icon-xs"
               variant="outline"
-              className="rounded border-[#262626] bg-[#0a0a0a] hover:bg-white hover:text-black hover:border-white transition-colors"
+              className="rounded-lg border-border/80 bg-muted hover:bg-primary hover:text-primary-foreground transition-colors"
             >
               <a
                 href={link.url}

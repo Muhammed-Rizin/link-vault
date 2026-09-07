@@ -94,8 +94,8 @@ export function VaultGrid() {
               {activeCategory === "All" ? "Link Vault" : activeCategory}
             </h2>
           </div>
-          <div className="mt-1 flex items-center gap-2 text-xs text-zinc-400 font-normal">
-            <Skeleton className="h-5 w-80 bg-[#262626]" />
+          <div className="mt-1 flex items-center gap-2 text-xs text-muted-foreground font-normal">
+            <Skeleton className="h-5 w-80 bg-muted/80 rounded-md" />
           </div>
         </div>
         <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -117,20 +117,20 @@ export function VaultGrid() {
             </h2>
             <Badge
               variant="outline"
-              className="font-semibold text-xs border-[#262626] bg-[#0a0a0a] text-zinc-300 px-2 py-0.5"
+              className="font-semibold text-xs border-border/80 bg-muted/60 text-muted-foreground px-2 py-0.5 rounded-md"
             >
               {links.length} {links.length === 1 ? "link" : "links"}
             </Badge>
           </div>
-          <div className="mt-1 flex items-center gap-2 text-xs text-zinc-400 font-normal">
+          <div className="mt-1 flex items-center gap-2 text-xs text-muted-foreground font-normal">
             {viewMode === "list" ? (
               <span>Drag list rows to reorder priority. Changes persist automatically.</span>
             ) : (
               <span>Saved web research and AI summaries.</span>
             )}
             {isReordering && (
-              <span className="flex items-center gap-1.5 text-white font-semibold animate-pulse">
-                <Loader2 className="size-3 animate-spin text-white" />
+              <span className="flex items-center gap-1.5 text-primary font-semibold animate-pulse">
+                <Loader2 className="size-3 animate-spin text-primary" />
                 Saving order...
               </span>
             )}
@@ -139,18 +139,18 @@ export function VaultGrid() {
       </div>
 
       {!links.length ? (
-        <div className="mt-12 flex flex-col items-center justify-center rounded-lg border border-dashed border-[#262626] p-12 text-center bg-[#141414]">
-          <div className="grid size-12 place-items-center rounded-md border border-[#262626] bg-[#0a0a0a] text-white mb-4">
+        <div className="mt-12 flex flex-col items-center justify-center rounded-2xl border border-dashed border-border/80 p-12 text-center bg-card shadow-sm">
+          <div className="grid size-12 place-items-center rounded-xl border border-border/80 bg-primary/10 text-primary mb-4">
             <Sparkles className="size-6" />
           </div>
-          <h3 className="text-base font-bold text-white">No links found</h3>
-          <p className="mt-1 max-w-sm text-xs text-zinc-400">
+          <h3 className="text-base font-bold text-foreground">No links found</h3>
+          <p className="mt-1 max-w-sm text-xs text-muted-foreground">
             No links match your current filter or search criteria. Add your first research link to
             populate your vault.
           </p>
           <button
             onClick={() => openCreateForm()}
-            className="mt-5 inline-flex items-center gap-2 rounded-md bg-white px-4 py-2 text-xs font-semibold text-black hover:bg-zinc-200 transition-colors"
+            className="mt-5 inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2 text-xs font-semibold text-primary-foreground hover:bg-primary/90 transition-colors shadow-md"
           >
             Add First Link
           </button>

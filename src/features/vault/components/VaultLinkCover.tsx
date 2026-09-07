@@ -129,31 +129,31 @@ export function VaultLinkCover({ link, layout, className }: VaultLinkCoverProps)
       return (
         <div
           className={cn(
-            "relative max-h-60 w-full overflow-hidden bg-black border-b border-[#262626] shrink-0",
+            "relative max-h-60 w-full overflow-hidden bg-muted/40 border-b border-border/80 shrink-0",
             className,
           )}
         >
           <img
             src={coverUrl}
             alt=""
-            className="h-full w-full object-cover opacity-90 transition-transform duration-300 group-hover:scale-102"
+            className="h-full w-full object-cover opacity-95 transition-transform duration-300 group-hover:scale-102"
             onError={() => setImageFailed(true)}
             referrerPolicy="no-referrer"
           />
           {hasYouTube ? (
             <>
-              <div className="absolute top-2.5 left-2.5 flex items-center gap-1 rounded bg-red-600 px-2 py-0.5 text-[10px] font-semibold text-white">
+              <div className="absolute top-2.5 left-2.5 flex items-center gap-1 rounded-md bg-red-600 px-2 py-0.5 text-[10px] font-semibold text-white shadow-md">
                 <Youtube className="size-3" />
                 <span>YouTube</span>
               </div>
               <div className="absolute inset-0 grid place-items-center">
-                <div className="grid size-10 place-items-center rounded-full bg-red-600 text-white shadow-md">
+                <div className="grid size-10 place-items-center rounded-full bg-red-600 text-white shadow-lg">
                   <Play className="size-4 fill-white ml-0.5" />
                 </div>
               </div>
             </>
           ) : (
-            <div className="absolute top-2.5 left-2.5 flex items-center gap-1.5 rounded bg-black/80 border border-[#262626] px-2 py-0.5 text-[10px] font-mono text-zinc-300 backdrop-blur-sm">
+            <div className="absolute top-2.5 left-2.5 flex items-center gap-1.5 rounded-md bg-background/90 border border-border/80 px-2 py-0.5 text-[10px] font-mono text-foreground backdrop-blur-md shadow-sm">
               <img
                 src={`https://www.google.com/s2/favicons?domain=${domain}&sz=32`}
                 alt=""
@@ -178,14 +178,14 @@ export function VaultLinkCover({ link, layout, className }: VaultLinkCoverProps)
       return (
         <div
           className={cn(
-            "shrink-0 overflow-hidden rounded-md border border-[#262626] bg-[#0a0a0a] flex items-center justify-center size-10",
+            "shrink-0 overflow-hidden rounded-lg border border-border/80 bg-muted flex items-center justify-center size-10 shadow-xs",
             className,
           )}
         >
           <img
             src={coverUrl}
             alt=""
-            className="size-full object-cover opacity-90 transition-transform duration-200 group-hover:scale-105"
+            className="size-full object-cover opacity-95 transition-transform duration-200 group-hover:scale-105"
             onError={() => setImageFailed(true)}
             referrerPolicy="no-referrer"
           />
@@ -196,7 +196,7 @@ export function VaultLinkCover({ link, layout, className }: VaultLinkCoverProps)
     return (
       <div
         className={cn(
-          "shrink-0 overflow-hidden rounded-md border border-[#262626] bg-[#0a0a0a] flex items-center justify-center size-10",
+          "shrink-0 overflow-hidden rounded-lg border border-border/80 bg-muted flex items-center justify-center size-10 shadow-xs",
           className,
         )}
       >
@@ -217,7 +217,7 @@ export function VaultLinkCover({ link, layout, className }: VaultLinkCoverProps)
     if (loading && !hasYouTube && !embedUrl && !coverUrl) {
       return (
         <Skeleton
-          className={cn("h-60 w-full rounded-t-lg bg-[#1c1c1c] animate-pulse", className)}
+          className={cn("h-60 w-full rounded-t-2xl bg-muted animate-pulse", className)}
         />
       );
     }
@@ -226,7 +226,7 @@ export function VaultLinkCover({ link, layout, className }: VaultLinkCoverProps)
       return (
         <div
           className={cn(
-            "relative h-70 sm:h-95 md:aspect-video w-full overflow-hidden bg-black border-b border-[#262626]",
+            "relative h-70 sm:h-95 md:aspect-video w-full overflow-hidden bg-black border-b border-border/80",
             className,
           )}
         >
@@ -246,7 +246,7 @@ export function VaultLinkCover({ link, layout, className }: VaultLinkCoverProps)
       return (
         <div
           className={cn(
-            "relative h-70 sm:h-95 md:aspect-video w-full overflow-hidden bg-black border-b border-[#262626]",
+            "relative h-70 sm:h-95 md:aspect-video w-full overflow-hidden bg-black border-b border-border/80",
             className,
           )}
         >
@@ -267,18 +267,18 @@ export function VaultLinkCover({ link, layout, className }: VaultLinkCoverProps)
       return (
         <div
           className={cn(
-            "relative h-48 sm:h-64 md:h-80 w-full overflow-hidden bg-black border-b border-[#262626]",
+            "relative h-48 sm:h-64 md:h-80 w-full overflow-hidden bg-muted/40 border-b border-border/80",
             className,
           )}
         >
           <img
             src={coverUrl}
             alt=""
-            className="h-full w-full object-cover opacity-90"
+            className="h-full w-full object-cover opacity-95"
             onError={() => setImageFailed(true)}
             referrerPolicy="no-referrer"
           />
-          <div className="absolute top-2.5 left-2.5 flex items-center gap-1.5 rounded bg-black/80 border border-[#262626] px-2 py-0.5 text-[10px] font-mono text-white backdrop-blur-sm">
+          <div className="absolute top-2.5 left-2.5 flex items-center gap-1.5 rounded-md bg-background/90 border border-border/80 px-2 py-0.5 text-[10px] font-mono text-foreground backdrop-blur-md shadow-sm">
             <img
               src={`https://www.google.com/s2/favicons?domain=${domain}&sz=32`}
               alt=""

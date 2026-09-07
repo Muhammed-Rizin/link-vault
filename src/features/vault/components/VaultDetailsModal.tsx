@@ -104,7 +104,7 @@ export function VaultDetailsModal({ link, onClose }: LinkDetailsModalProps) {
     <AnimatePresence>
       {link && (
         <motion.div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-3 sm:p-4 backdrop-blur-sm"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-3 sm:p-4 backdrop-blur-md"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
@@ -118,36 +118,36 @@ export function VaultDetailsModal({ link, onClose }: LinkDetailsModalProps) {
             className="relative w-full max-w-2xl max-h-[92vh] sm:max-h-[90vh] flex flex-col"
             onClick={(event) => event.stopPropagation()}
           >
-            <Card className="border-[#262626] bg-[#141414] shadow-2xl overflow-hidden rounded-xl flex flex-col max-h-full">
+            <Card className="border-border/80 bg-card text-card-foreground shadow-2xl overflow-hidden rounded-2xl flex flex-col max-h-full">
               {/* Header - Renders Immediately */}
-              <CardHeader className="pb-3 px-4 sm:px-6 pt-4 sm:pt-5 border-b border-[#262626] shrink-0">
+              <CardHeader className="pb-3 px-4 sm:px-6 pt-4 sm:pt-5 border-b border-border/80 shrink-0">
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex min-w-0 items-start gap-3">
                     <img
                       src={`https://www.google.com/s2/favicons?domain=${targetDomain}&sz=128`}
                       alt=""
-                      className="mt-0.5 size-9 rounded border border-[#262626] bg-[#0a0a0a] p-1 shrink-0"
+                      className="mt-0.5 size-9 rounded-lg border border-border/80 bg-muted p-1 shrink-0"
                     />
                     <div className="min-w-0">
                       <div className="flex items-center gap-2">
-                        <CardTitle className="text-balance text-base font-bold tracking-tight text-white break-words">
+                        <CardTitle className="text-balance text-base font-bold tracking-tight text-foreground break-words">
                           {link.title}
                         </CardTitle>
                       </div>
-                      <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-zinc-400">
-                        <span className="flex items-center gap-1 font-mono text-zinc-300">
-                          <Globe className="size-3 text-zinc-500" />
+                      <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+                        <span className="flex items-center gap-1 font-mono text-muted-foreground font-semibold">
+                          <Globe className="size-3 text-muted-foreground" />
                           {targetDomain}
                         </span>
                         <span>•</span>
                         <Badge
                           variant="outline"
-                          className="font-medium text-[10px] uppercase tracking-wider border-[#262626] bg-[#0a0a0a] text-zinc-300 px-2 py-0.5"
+                          className="font-semibold text-[10px] uppercase tracking-wider border-border/80 bg-muted text-muted-foreground px-2 py-0.5 rounded-md"
                         >
                           {link.category}
                         </Badge>
                         <span>•</span>
-                        <span className="flex items-center gap-1 text-zinc-500">
+                        <span className="flex items-center gap-1 text-muted-foreground">
                           <CalendarDays className="size-3" />
                           {formatDateTime(link.created_at)}
                         </span>
@@ -159,7 +159,7 @@ export function VaultDetailsModal({ link, onClose }: LinkDetailsModalProps) {
                     variant="ghost"
                     onClick={handleModalClose}
                     aria-label="Close details"
-                    className="rounded text-zinc-400 hover:bg-[#262626]"
+                    className="rounded-lg text-muted-foreground hover:text-foreground hover:bg-accent"
                   >
                     <X className="size-4" />
                   </Button>
@@ -169,7 +169,7 @@ export function VaultDetailsModal({ link, onClose }: LinkDetailsModalProps) {
               {/* Scrollable Body */}
               <CardContent className="space-y-4 px-4 sm:px-6 py-4 sm:py-5 overflow-y-auto flex-1">
                 {/* UNIFIED TARGET LINK CARD */}
-                <div className="overflow-hidden rounded-lg border border-[#262626] bg-[#0a0a0a]">
+                <div className="overflow-hidden rounded-xl border border-border/80 bg-background/80 shadow-sm">
                   <VaultLinkCover link={link} layout="detail" />
 
                   {/* Web Page Details & AI Summary - RENDERS IMMEDIATELY */}
@@ -180,21 +180,21 @@ export function VaultDetailsModal({ link, onClose }: LinkDetailsModalProps) {
                           href={link.url}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="text-xs font-semibold text-white hover:underline transition-all break-words"
+                          className="text-xs font-semibold text-foreground hover:underline hover:text-primary transition-all break-words"
                         >
                           {link.title}
                         </a>
-                        <ExternalLink className="size-3.5 text-zinc-400 hover:text-white shrink-0 mt-0.5" />
+                        <ExternalLink className="size-3.5 text-muted-foreground hover:text-foreground shrink-0 mt-0.5" />
                       </div>
-                      <p className="mt-1 text-xs leading-relaxed text-zinc-400 font-normal">
+                      <p className="mt-1 text-xs leading-relaxed text-muted-foreground font-normal">
                         {link.summary || `Web page resource on ${targetDomain}.`}
                       </p>
-                      <p className="text-[10px] font-mono text-zinc-500 truncate pt-1">
+                      <p className="text-[10px] font-mono text-muted-foreground truncate pt-1">
                         <a
                           href={link.url}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="hover:underline hover:text-zinc-300"
+                          className="hover:underline hover:text-foreground"
                         >
                           {link.url}
                         </a>
@@ -202,11 +202,11 @@ export function VaultDetailsModal({ link, onClose }: LinkDetailsModalProps) {
                     </div>
 
                     {/* Directly Attached AI Key Summary - RENDERS IMMEDIATELY */}
-                    <div className="pt-3 border-t border-[#262626] space-y-1">
-                      <div className="flex items-center gap-1.5 text-xs font-semibold text-zinc-200">
+                    <div className="pt-3 border-t border-border/60 space-y-1">
+                      <div className="flex items-center gap-1.5 text-xs font-semibold text-foreground">
                         <span>Summary</span>
                       </div>
-                      <p className="text-xs leading-relaxed text-zinc-300 font-normal">
+                      <p className="text-xs leading-relaxed text-muted-foreground font-normal">
                         {link.summary || "No summary captured yet for this saved link."}
                       </p>
                     </div>
@@ -215,7 +215,7 @@ export function VaultDetailsModal({ link, onClose }: LinkDetailsModalProps) {
 
                 {/* UNIFIED REFERRER SOURCE CARD - TEXT RENDERS IMMEDIATELY */}
                 {hasSourceUrl && link.source_url && (
-                  <div className="rounded-lg border border-[#262626] bg-[#0a0a0a] p-4 space-y-2">
+                  <div className="rounded-xl border border-border/80 bg-background/80 p-4 space-y-2 shadow-sm">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
                         <img
@@ -223,7 +223,7 @@ export function VaultDetailsModal({ link, onClose }: LinkDetailsModalProps) {
                           alt=""
                           className="size-4 shrink-0 rounded-xs"
                         />
-                        <span className="text-[10px] font-semibold text-zinc-400 uppercase tracking-wider truncate max-w-[150px] sm:max-w-none">
+                        <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider truncate max-w-[150px] sm:max-w-none">
                           Referrer Source ({sourceDomain})
                         </span>
                       </div>
@@ -235,24 +235,24 @@ export function VaultDetailsModal({ link, onClose }: LinkDetailsModalProps) {
                           href={link.source_url}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="text-xs font-semibold text-white hover:underline transition-all break-words"
+                          className="text-xs font-semibold text-foreground hover:underline hover:text-primary transition-all break-words"
                         >
                           {sourcePreview?.title || `Referrer Link on ${sourceDomain}`}
                         </a>
-                        <ExternalLink className="size-3 text-zinc-400 hover:text-white shrink-0 mt-0.5" />
+                        <ExternalLink className="size-3 text-muted-foreground hover:text-foreground shrink-0 mt-0.5" />
                       </div>
-                      <p className="mt-1 text-xs leading-relaxed text-zinc-400 font-normal">
+                      <p className="mt-1 text-xs leading-relaxed text-muted-foreground font-normal">
                         {sourcePreview?.description ||
                           (loadingSource
                             ? "Fetching source webpage metadata..."
                             : `Source URL captured when saving target bookmark.`)}
                       </p>
-                      <p className="text-[10px] font-mono text-zinc-500 truncate pt-1">
+                      <p className="text-[10px] font-mono text-muted-foreground truncate pt-1">
                         <a
                           href={link.source_url}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="hover:underline hover:text-zinc-300"
+                          className="hover:underline hover:text-foreground"
                         >
                           {link.source_url}
                         </a>
@@ -262,11 +262,11 @@ export function VaultDetailsModal({ link, onClose }: LinkDetailsModalProps) {
                 )}
 
                 {/* Footer Actions */}
-                <div className="flex items-center justify-end border-t border-[#262626] pt-3 mt-2">
+                <div className="flex items-center justify-end border-t border-border/80 pt-3 mt-2">
                   <Button
                     variant="ghost"
                     onClick={handleModalClose}
-                    className="font-semibold text-xs rounded-md text-zinc-400 hover:bg-[#262626]"
+                    className="font-semibold text-xs rounded-xl text-muted-foreground hover:text-foreground hover:bg-accent"
                   >
                     Close
                   </Button>

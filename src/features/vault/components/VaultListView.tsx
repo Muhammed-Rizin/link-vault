@@ -54,8 +54,8 @@ export function SortableVaultRow({
       ref={setNodeRef}
       style={style}
       className={cn(
-        "group relative flex items-center justify-between gap-3.5 rounded-lg border border-[#262626] bg-[#141414] px-3.5 py-2.5 transition-colors hover:border-zinc-500/50",
-        isMenuOpen && "border-zinc-500 bg-[#1c1c1c]"
+        "group relative flex items-center justify-between gap-3.5 rounded-xl border border-border/80 bg-card px-3.5 py-2.5 transition-all hover:border-primary/40 shadow-sm hover:shadow-md",
+        isMenuOpen && "border-primary/60 bg-accent/40"
       )}
     >
       {/* Drag handle */}
@@ -63,7 +63,7 @@ export function SortableVaultRow({
         type="button"
         {...attributes}
         {...listeners}
-        className="cursor-grab active:cursor-grabbing text-zinc-600 hover:text-zinc-300 transition-colors p-1 shrink-0"
+        className="cursor-grab active:cursor-grabbing text-muted-foreground/60 hover:text-foreground transition-colors p-1 shrink-0"
         aria-label="Drag handle"
       >
         <GripVertical className="size-4" />
@@ -87,14 +87,14 @@ export function SortableVaultRow({
 
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2">
-            <h4 className="truncate text-xs font-semibold text-white group-hover:text-zinc-200 transition-colors">
+            <h4 className="truncate text-xs font-semibold text-foreground group-hover:text-primary transition-colors">
               {link.title}
             </h4>
-            <Badge variant="outline" className="h-4 px-1.5 text-[9px] font-medium uppercase tracking-wider bg-[#0a0a0a] border-[#262626] shrink-0 text-zinc-400">
+            <Badge variant="outline" className="h-4 px-1.5 text-[9px] font-semibold uppercase tracking-wider bg-muted/60 border-border/80 shrink-0 text-muted-foreground rounded-md">
               {link.category}
             </Badge>
           </div>
-          <p className="mt-0.5 truncate text-[11px] text-zinc-400 font-normal">
+          <p className="mt-0.5 truncate text-[11px] text-muted-foreground font-normal">
             {link.summary || domain}
           </p>
         </div>
@@ -106,7 +106,7 @@ export function SortableVaultRow({
           asChild
           size="icon-xs"
           variant="outline"
-          className="rounded border-[#262626] bg-[#0a0a0a] hover:bg-white hover:text-black hover:border-white transition-colors"
+          className="rounded-lg border-border/80 bg-muted hover:bg-primary hover:text-primary-foreground transition-colors"
         >
           <a
             href={link.url}
@@ -127,7 +127,7 @@ export function SortableVaultRow({
               e.stopPropagation();
               onToggleMenu();
             }}
-            className="rounded hover:bg-[#262626] text-zinc-400 hover:text-white"
+            className="rounded-lg hover:bg-accent text-muted-foreground hover:text-foreground"
           >
             <MoreHorizontal className="size-4" />
           </Button>
@@ -138,7 +138,7 @@ export function SortableVaultRow({
                 initial={{ opacity: 0, y: -4, scale: 0.98 }}
                 animate={{ opacity: 1, y: 0, scale: 1 }}
                 exit={{ opacity: 0, y: -4, scale: 0.98 }}
-                className="absolute right-0 top-7 z-30 w-32 rounded-md border border-[#262626] bg-[#141414] p-1 shadow-xl"
+                className="absolute right-0 top-7 z-30 w-32 rounded-xl border border-border/80 bg-popover p-1 shadow-xl backdrop-blur-xl"
               >
                 <button
                   type="button"
@@ -146,7 +146,7 @@ export function SortableVaultRow({
                     e.stopPropagation();
                     onEdit();
                   }}
-                  className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-xs font-medium hover:bg-[#262626] transition-colors text-zinc-200"
+                  className="flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-xs font-medium hover:bg-accent transition-colors text-foreground"
                 >
                   <Pencil className="size-3.5 opacity-70" />
                   Edit
@@ -157,12 +157,12 @@ export function SortableVaultRow({
                     e.stopPropagation();
                     onDelete();
                   }}
-                  className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-xs font-medium text-red-400 hover:bg-red-500/10 transition-colors"
+                  className="flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-xs font-medium text-destructive hover:bg-destructive/10 transition-colors"
                 >
                   <Trash2 className="size-3.5 opacity-70" />
                   Delete
                 </button>
-                </motion.div>
+              </motion.div>
             )}
           </AnimatePresence>
         </div>
